@@ -5,7 +5,7 @@ import requests
 import json
 import os
 
-BOX_ACCESS_TOKEN = os.environ.get("BOX_ACCESS_TOKEN")
+BOX_ACCESS_TOKEN = "BtsP2CuhxGJUpTAwNkeGshzS3FMwnkjH"
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 
 app = Flask(__name__)
