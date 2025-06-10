@@ -30,15 +30,20 @@ def webhook():
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
 
+    groupings = data.get("groupings", {})
     response_data = data.get("response", {})
     print("✅ Received Qualtrics Data:", response_data)
 
-    # Prepare CSV content
+    # Prepare two-row CSV header
     fieldnames = list(response_data.keys())
+    group_row = [groupings.get(f, f) for f in fieldnames]
+    question_row = fieldnames
+
     buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
-    writer.writeheader()
-    writer.writerow(response_data)
+    writer = csv.writer(buffer)
+    writer.writerow(group_row)
+    writer.writerow(question_row)
+    writer.writerow([response_data.get(f, "") for f in fieldnames])
     csv_content = buffer.getvalue()
 
     # Save individual response
@@ -47,7 +52,7 @@ def webhook():
     upload_file(individual_name, csv_content)
 
     # Update or create master CSV
-    update_master_csv(fieldnames, response_data)
+    update_master_csv(fieldnames, response_data, group_row, question_row)
 
     return jsonify({"status": "success"}), 200
 
@@ -94,7 +99,7 @@ def find_master_file():
     return None
 
 
-def update_master_csv(fieldnames, new_row):
+def update_master_csv(fieldnames, new_row, group_row, question_row):
     file_id = find_master_file()
 
     if file_id:
@@ -102,33 +107,47 @@ def update_master_csv(fieldnames, new_row):
         resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
         if resp.status_code == 200:
             existing_content = resp.content.decode()
-
-            # Parse existing CSV
-            existing_reader = csv.DictReader(io.StringIO(existing_content))
+            existing_reader = csv.reader(io.StringIO(existing_content))
             existing_rows = list(existing_reader)
-            existing_fieldnames = existing_reader.fieldnames or []
+
+            # Assume first two rows are header rows
+            existing_group_row = existing_rows[0] if len(existing_rows) >= 2 else []
+            existing_question_row = existing_rows[1] if len(existing_rows) >= 2 else []
+            data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
 
             # Merge fieldnames
-            all_fieldnames = list(existing_fieldnames)
+            all_fieldnames = list(existing_question_row)
             for field in fieldnames:
                 if field not in all_fieldnames:
                     all_fieldnames.append(field)
 
-            # Create updated CSV
-            buf = io.StringIO()
-            writer = csv.DictWriter(buf, fieldnames=all_fieldnames)
-            writer.writeheader()
+            # Build updated group_row and question_row
+            updated_group_row = [group_row[fieldnames.index(f)] if f in fieldnames else "" for f in all_fieldnames]
+            updated_question_row = all_fieldnames
 
-            for row in existing_rows:
-                writer.writerow(row)
-            writer.writerow(new_row)
+            # Build all data rows, aligning by column
+            aligned_data_rows = []
+            for row in data_rows:
+                row_dict = dict(zip(existing_question_row, row))
+                aligned_row = [row_dict.get(f, "") for f in all_fieldnames]
+                aligned_data_rows.append(aligned_row)
+            # Add new row
+            new_aligned_row = [new_row.get(f, "") for f in all_fieldnames]
+            aligned_data_rows.append(new_aligned_row)
+
+            # Write back to buffer
+            buf = io.StringIO()
+            writer = csv.writer(buf)
+            writer.writerow(updated_group_row)
+            writer.writerow(updated_question_row)
+            writer.writerows(aligned_data_rows)
 
             # Update file
             files = {'file': (MASTER_FILENAME, buf.getvalue(), 'text/csv')}
             resp2 = session.post(BOX_UPDATE_URL.format(file_id=file_id), files=files)
 
             if resp2.status_code == 201:
-                print(f"✅ Updated master CSV (now {len(existing_rows) + 1} rows)")
+                print(f"✅ Updated master CSV (now {len(aligned_data_rows)} rows)")
             else:
                 print(f"❌ Master update failed ({resp2.status_code})")
         else:
@@ -136,9 +155,10 @@ def update_master_csv(fieldnames, new_row):
     else:
         # Create new master file
         buf = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerow(new_row)
+        writer = csv.writer(buf)
+        writer.writerow(group_row)
+        writer.writerow(question_row)
+        writer.writerow([new_row.get(f, "") for f in fieldnames])
         upload_file(MASTER_FILENAME, buf.getvalue())
         print("✅ Created new master CSV")
 
