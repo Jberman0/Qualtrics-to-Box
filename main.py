@@ -15,34 +15,6 @@ app = Flask(__name__)
 BOX_FOLDER_ID = "325307519819"
 MASTER_FILENAME = "data_master.csv"
 
-# Hardcoded column order for CSVs (matches your Qualtrics JSON)
-COLUMN_ORDER = [
-    "participantID",
-    "date",
-    "time",
-    "${q://QID10/QuestionText}",
-    "${q://QID15/QuestionText}",
-    "${q://QID17/QuestionText}",
-    "${q://QID21/QuestionText}",
-    "${q://QID23/QuestionText}",
-    "${q://QID27/QuestionText}",
-    "${q://QID28/QuestionText}",
-    "${q://QID25/QuestionText}",
-    "${q://QID26/QuestionText}",
-    "${q://QID39/QuestionText}",
-    "${q://QID41/QuestionText}",
-    "${q://QID42/QuestionText}",
-    "${q://QID43/QuestionText}",
-    "${q://QID44/QuestionText}",
-    "${q://QID55/QuestionText}",
-    "${q://QID46/QuestionText}",
-    "${q://QID48/QuestionText}",
-    "${q://QID49/QuestionText}",
-    "${q://QID50/QuestionText}",
-    "${q://QID51/QuestionText}",
-    "${q://QID52/QuestionText}"
-]
-
 # Box API endpoints
 BOX_UPLOAD_URL = "https://upload.box.com/api/2.0/files/content"
 BOX_SEARCH_URL = "https://api.box.com/2.0/search"
@@ -59,21 +31,24 @@ def webhook():
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
 
+    order = data.get("order", [])
     groupings = data.get("groupings", {})
+    questions = data.get("questions", {})
     response_data = data.get("response", {})
     print("✅ Received Qualtrics Data:", response_data)
     print("Groupings:", groupings)
+    print("Order:", order)
 
-    # Enforce field order using COLUMN_ORDER
-    fieldnames = [f for f in COLUMN_ORDER if f in response_data]
+    fieldnames = order
     group_row = [groupings.get(f, f) for f in fieldnames]
-    question_row = fieldnames
+    question_row = [questions.get(f, f) for f in fieldnames]
+    data_row = [response_data.get(f, "") for f in fieldnames]
 
     buffer = io.StringIO()
     writer = csv.writer(buffer)
     writer.writerow(group_row)
     writer.writerow(question_row)
-    writer.writerow([response_data.get(f, "") for f in fieldnames])
+    writer.writerow(data_row)
     csv_content = buffer.getvalue()
 
     # Save individual response with unique filename
@@ -87,7 +62,7 @@ def webhook():
         return jsonify({"status": "error", "message": str(e)}), 503
 
     # Update or create master CSV
-    update_master_csv(fieldnames, response_data, group_row, question_row)
+    update_master_csv(fieldnames, response_data, group_row, question_row, data_row)
 
     return jsonify({"status": "success"}), 200
 
@@ -161,7 +136,7 @@ def find_master_file():
 
     return None
 
-def update_master_csv(fieldnames, new_row, group_row, question_row):
+def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
     file_id = find_master_file()
 
     if file_id:
@@ -173,11 +148,13 @@ def update_master_csv(fieldnames, new_row, group_row, question_row):
             existing_rows = list(existing_reader)
 
             # Assume first two rows are header rows
+            # If the order has changed, override with current fieldnames
+            # Otherwise preserve previous data as much as possible
             existing_group_row = existing_rows[0] if len(existing_rows) >= 2 else []
             existing_question_row = existing_rows[1] if len(existing_rows) >= 2 else []
             data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
 
-            # -- Always use current field order --
+            # Always use current order
             all_fieldnames = fieldnames
             updated_group_row = group_row
             updated_question_row = question_row
@@ -189,8 +166,7 @@ def update_master_csv(fieldnames, new_row, group_row, question_row):
                 aligned_row = [row_dict.get(f, "") for f in all_fieldnames]
                 aligned_data_rows.append(aligned_row)
             # Add new row
-            new_aligned_row = [new_row.get(f, "") for f in all_fieldnames]
-            aligned_data_rows.append(new_aligned_row)
+            aligned_data_rows.append(data_row)
 
             # Write back to buffer
             buf = io.StringIO()
@@ -215,7 +191,7 @@ def update_master_csv(fieldnames, new_row, group_row, question_row):
         writer = csv.writer(buf)
         writer.writerow(group_row)
         writer.writerow(question_row)
-        writer.writerow([new_row.get(f, "") for f in fieldnames])
+        writer.writerow(data_row)
         upload_file(MASTER_FILENAME, buf.getvalue())
         print("✅ Created new master CSV")
 
