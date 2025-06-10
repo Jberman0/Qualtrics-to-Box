@@ -47,7 +47,7 @@ def webhook():
     csv_content = buffer.getvalue()
 
     # Save individual response
-    participant_id = response_data.get("Participant_ID", "unknown")
+    participant_id = response_data.get("participantID", "unknown")
     individual_name = f"slb_{participant_id}.csv"
     upload_file(individual_name, csv_content)
 
