@@ -136,7 +136,7 @@ def find_master_file():
 
     return None
 
-def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
+def update_master_csv(fieldnames, new_row_data, group_row, question_row, data_row):
     file_id = find_master_file()
 
     if file_id:
@@ -147,26 +147,51 @@ def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
             existing_reader = csv.reader(io.StringIO(existing_content))
             existing_rows = list(existing_reader)
 
-            # Assume first two rows are header rows
-            # If the order has changed, override with current fieldnames
-            # Otherwise preserve previous data as much as possible
-            existing_group_row = existing_rows[0] if len(existing_rows) >= 2 else []
-            existing_question_row = existing_rows[1] if len(existing_rows) >= 2 else []
-            data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
-
-            # Always use current order
-            all_fieldnames = fieldnames
-            updated_group_row = group_row
-            updated_question_row = question_row
-
-            # Align all previous rows to new column order
-            aligned_data_rows = []
-            for row in data_rows:
-                row_dict = dict(zip(existing_question_row, row))
-                aligned_row = [row_dict.get(f, "") for f in all_fieldnames]
-                aligned_data_rows.append(aligned_row)
-            # Add new row
-            aligned_data_rows.append(data_row)
+            print(f"📄 Existing CSV has {len(existing_rows)} rows")
+            
+            if len(existing_rows) >= 2:
+                # Get existing structure
+                existing_fieldnames = existing_rows[0]  # This should be the field IDs
+                existing_group_row = existing_rows[0]   # Group labels
+                existing_question_row = existing_rows[1] # Question text
+                existing_data_rows = existing_rows[2:]   # Actual data
+                
+                print(f"🔍 Existing fieldnames: {existing_fieldnames[:3]}...")  # Show first 3
+                print(f"🔍 Current fieldnames: {fieldnames[:3]}...")  # Show first 3
+                
+                # Use the field IDs (first row) to align data, not the question text
+                aligned_data_rows = []
+                for i, row in enumerate(existing_data_rows):
+                    if len(row) == 0:  # Skip empty rows
+                        continue
+                        
+                    # Create dictionary using existing fieldnames as keys
+                    row_dict = {}
+                    for j, field in enumerate(existing_fieldnames):
+                        if j < len(row):
+                            row_dict[field] = row[j]
+                        else:
+                            row_dict[field] = ""
+                    
+                    # Align to current field order
+                    aligned_row = [row_dict.get(f, "") for f in fieldnames]
+                    aligned_data_rows.append(aligned_row)
+                    print(f"🔄 Aligned row {i+1}: {aligned_row[:3]}...")  # Show first 3 values
+                
+                # Add new row
+                aligned_data_rows.append(data_row)
+                print(f"➕ Added new row: {data_row[:3]}...")  # Show first 3 values
+                
+                # Use current structure for headers
+                updated_group_row = group_row
+                updated_question_row = question_row
+                
+            else:
+                # File exists but is empty or malformed
+                print("⚠️ Existing file is empty or malformed, treating as new")
+                aligned_data_rows = [data_row]
+                updated_group_row = group_row
+                updated_question_row = question_row
 
             # Write back to buffer
             buf = io.StringIO()
@@ -182,7 +207,7 @@ def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
             if resp2.status_code == 201:
                 print(f"✅ Updated master CSV (now {len(aligned_data_rows)} rows)")
             else:
-                print(f"❌ Master update failed ({resp2.status_code})")
+                print(f"❌ Master update failed ({resp2.status_code}): {resp2.text}")
         else:
             print(f"❌ Failed to download master ({resp.status_code})")
     else:
