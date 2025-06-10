@@ -3,6 +3,10 @@ import csv
 import io
 import requests
 import json
+import os
+
+BOX_ACCESS_TOKEN = os.environ.get("BOX_ACCESS_TOKEN")
+EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 
 app = Flask(__name__)
 
