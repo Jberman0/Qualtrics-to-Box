@@ -136,7 +136,7 @@ def find_master_file():
 
     return None
 
-def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
+def update_master_csv(fieldnames, response_data, group_row, question_row, data_row):
     file_id = find_master_file()
 
     if file_id:
@@ -147,40 +147,28 @@ def update_master_csv(fieldnames, new_row, group_row, question_row, data_row):
             existing_reader = csv.reader(io.StringIO(existing_content))
             existing_rows = list(existing_reader)
 
-            # Assume first two rows are header rows
-            # If the order has changed, override with current fieldnames
-            # Otherwise preserve previous data as much as possible
-            existing_group_row = existing_rows[0] if len(existing_rows) >= 2 else []
-            existing_question_row = existing_rows[1] if len(existing_rows) >= 2 else []
-            data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
-
-            # Always use current order
-            all_fieldnames = fieldnames
+            # Always use current group, question, and field order
             updated_group_row = group_row
             updated_question_row = question_row
 
-            # Align all previous rows to new column order
-            aligned_data_rows = []
-            for row in data_rows:
-                row_dict = dict(zip(existing_question_row, row))
-                aligned_row = [row_dict.get(f, "") for f in all_fieldnames]
-                aligned_data_rows.append(aligned_row)
-            # Add new row
-            aligned_data_rows.append(data_row)
+            # All rows after the headers are data rows
+            existing_data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
 
-            # Write back to buffer
+            # Append new row to the previous data rows
+            all_data_rows = existing_data_rows + [data_row]
+
+            # Write back
             buf = io.StringIO()
             writer = csv.writer(buf)
             writer.writerow(updated_group_row)
             writer.writerow(updated_question_row)
-            writer.writerows(aligned_data_rows)
+            writer.writerows(all_data_rows)
 
-            # Update file
             files = {'file': (MASTER_FILENAME, buf.getvalue(), 'text/csv')}
             resp2 = session.post(BOX_UPDATE_URL.format(file_id=file_id), files=files)
 
             if resp2.status_code == 201:
-                print(f"✅ Updated master CSV (now {len(aligned_data_rows)} rows)")
+                print(f"✅ Updated master CSV (now {len(all_data_rows)} rows)")
             else:
                 print(f"❌ Master update failed ({resp2.status_code})")
         else:
