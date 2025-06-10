@@ -46,16 +46,38 @@ def webhook():
     writer.writerow([response_data.get(f, "") for f in fieldnames])
     csv_content = buffer.getvalue()
 
-    # Save individual response
+    # Save individual response with unique filename
     participant_id = response_data.get("participantID", "unknown")
     individual_name = f"slb_{participant_id}.csv"
-    upload_file(individual_name, csv_content)
+    unique_name = get_unique_filename(individual_name)
+    upload_file(unique_name, csv_content)
 
     # Update or create master CSV
     update_master_csv(fieldnames, response_data, group_row, question_row)
 
     return jsonify({"status": "success"}), 200
 
+
+def get_unique_filename(base_filename):
+    name, ext = os.path.splitext(base_filename)
+    count = 1
+    filename = base_filename
+
+    while file_exists_in_box(filename):
+        filename = f"{name}_{count}{ext}"
+        count += 1
+
+    return filename
+
+def file_exists_in_box(filename):
+    folder_url = f"https://api.box.com/2.0/folders/{BOX_FOLDER_ID}/items"
+    resp = session.get(folder_url)
+    if resp.status_code == 200:
+        entries = resp.json().get("entries", [])
+        for entry in entries:
+            if entry.get("name") == filename and entry.get("type") == "file":
+                return True
+    return False
 
 def upload_file(filename, content):
     files = {
