@@ -11,7 +11,7 @@ EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 app = Flask(__name__)
 
 # ── Configurable settings ─────────────────────────────
-BOX_FOLDER_ID = "325307519819"
+BOX_FOLDER_ID = "0"
 MASTER_FILENAME = "data_master.csv"
 
 # Box API endpoints
