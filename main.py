@@ -34,6 +34,7 @@ def webhook():
     groupings = data.get("groupings", {})
     response_data = data.get("response", {})
     print("✅ Received Qualtrics Data:", response_data)
+    print("Groupings:", groupings)
 
     # Prepare two-row CSV header
     fieldnames = list(response_data.keys())
