@@ -4,6 +4,7 @@ import io
 import requests
 import json
 import os
+import time
 
 BOX_ACCESS_TOKEN = os.environ.get("BOX_ACCESS_TOKEN")
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
@@ -49,14 +50,17 @@ def webhook():
     # Save individual response with unique filename
     participant_id = response_data.get("participantID", "unknown")
     individual_name = f"slb_{participant_id}.csv"
-    unique_name = get_unique_filename(individual_name)
-    upload_file(unique_name, csv_content)
+    try:
+        unique_name = get_unique_filename(individual_name)
+        upload_file(unique_name, csv_content)
+    except ConnectionError as e:
+        print(f"❌ {e}")
+        return jsonify({"status": "error", "message": str(e)}), 503
 
     # Update or create master CSV
     update_master_csv(fieldnames, response_data, group_row, question_row)
 
     return jsonify({"status": "success"}), 200
-
 
 def get_unique_filename(base_filename):
     name, ext = os.path.splitext(base_filename)
@@ -69,15 +73,24 @@ def get_unique_filename(base_filename):
 
     return filename
 
-def file_exists_in_box(filename):
+def file_exists_in_box(filename, retries=3, delay=2):
     folder_url = f"https://api.box.com/2.0/folders/{BOX_FOLDER_ID}/items"
-    resp = session.get(folder_url)
-    if resp.status_code == 200:
-        entries = resp.json().get("entries", [])
-        for entry in entries:
-            if entry.get("name") == filename and entry.get("type") == "file":
-                return True
-    return False
+    for attempt in range(retries):
+        try:
+            resp = session.get(folder_url, timeout=10)
+            if resp.status_code == 200:
+                entries = resp.json().get("entries", [])
+                for entry in entries:
+                    if entry.get("name") == filename and entry.get("type") == "file":
+                        return True
+                return False
+            else:
+                print(f"⚠️ Box folder listing failed ({resp.status_code}): {resp.text}")
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Box connection failed (attempt {attempt+1}): {e}")
+            time.sleep(delay)
+    # If we still can't connect after retries, fail safe
+    raise ConnectionError(f"Unable to check for existing file '{filename}' on Box after {retries} attempts.")
 
 def upload_file(filename, content):
     files = {
@@ -92,7 +105,6 @@ def upload_file(filename, content):
         print(f"⚠️ File {filename} already exists")
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
-
 
 def find_master_file():
     # Try search first
@@ -119,7 +131,6 @@ def find_master_file():
                 return entry.get("id")
 
     return None
-
 
 def update_master_csv(fieldnames, new_row, group_row, question_row):
     file_id = find_master_file()
@@ -183,7 +194,6 @@ def update_master_csv(fieldnames, new_row, group_row, question_row):
         writer.writerow([new_row.get(f, "") for f in fieldnames])
         upload_file(MASTER_FILENAME, buf.getvalue())
         print("✅ Created new master CSV")
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000)
