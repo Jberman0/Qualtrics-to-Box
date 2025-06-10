@@ -15,6 +15,34 @@ app = Flask(__name__)
 BOX_FOLDER_ID = "325307519819"
 MASTER_FILENAME = "data_master.csv"
 
+# Hardcoded column order for CSVs (matches your Qualtrics JSON)
+COLUMN_ORDER = [
+    "participantID",
+    "date",
+    "time",
+    "${q://QID10/QuestionText}",
+    "${q://QID15/QuestionText}",
+    "${q://QID17/QuestionText}",
+    "${q://QID21/QuestionText}",
+    "${q://QID23/QuestionText}",
+    "${q://QID27/QuestionText}",
+    "${q://QID28/QuestionText}",
+    "${q://QID25/QuestionText}",
+    "${q://QID26/QuestionText}",
+    "${q://QID39/QuestionText}",
+    "${q://QID41/QuestionText}",
+    "${q://QID42/QuestionText}",
+    "${q://QID43/QuestionText}",
+    "${q://QID44/QuestionText}",
+    "${q://QID55/QuestionText}",
+    "${q://QID46/QuestionText}",
+    "${q://QID48/QuestionText}",
+    "${q://QID49/QuestionText}",
+    "${q://QID50/QuestionText}",
+    "${q://QID51/QuestionText}",
+    "${q://QID52/QuestionText}"
+]
+
 # Box API endpoints
 BOX_UPLOAD_URL = "https://upload.box.com/api/2.0/files/content"
 BOX_SEARCH_URL = "https://api.box.com/2.0/search"
@@ -36,8 +64,8 @@ def webhook():
     print("✅ Received Qualtrics Data:", response_data)
     print("Groupings:", groupings)
 
-    # Prepare two-row CSV header
-    fieldnames = list(response_data.keys())
+    # Enforce field order using COLUMN_ORDER
+    fieldnames = [f for f in COLUMN_ORDER if f in response_data]
     group_row = [groupings.get(f, f) for f in fieldnames]
     question_row = fieldnames
 
@@ -149,17 +177,12 @@ def update_master_csv(fieldnames, new_row, group_row, question_row):
             existing_question_row = existing_rows[1] if len(existing_rows) >= 2 else []
             data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
 
-            # Merge fieldnames
-            all_fieldnames = list(existing_question_row)
-            for field in fieldnames:
-                if field not in all_fieldnames:
-                    all_fieldnames.append(field)
+            # -- Always use current field order --
+            all_fieldnames = fieldnames
+            updated_group_row = group_row
+            updated_question_row = question_row
 
-            # Build updated group_row and question_row
-            updated_group_row = [group_row[fieldnames.index(f)] if f in fieldnames else "" for f in all_fieldnames]
-            updated_question_row = all_fieldnames
-
-            # Build all data rows, aligning by column
+            # Align all previous rows to new column order
             aligned_data_rows = []
             for row in data_rows:
                 row_dict = dict(zip(existing_question_row, row))
