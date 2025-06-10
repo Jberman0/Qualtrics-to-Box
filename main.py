@@ -7,9 +7,6 @@ import json
 app = Flask(__name__)
 
 # ── Configurable settings ─────────────────────────────
-EXPECTED_TOKEN = "Functional1!"
-# For now, use a Developer Token until OAuth is approved
-BOX_ACCESS_TOKEN = "4yCy5PyESBuobBdXsetCkfiRTPlH8TAb"
 BOX_FOLDER_ID = "325307519819"
 MASTER_FILENAME = "data_master.csv"
 
