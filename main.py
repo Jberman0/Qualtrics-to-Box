@@ -70,7 +70,7 @@ def get_access_token():
 
 def get_session():
     """Get a requests session with current access token"""
-    token = get_current_token()
+    token = get_access_token()
     session = requests.Session()
     session.headers.update({"Authorization": f"Bearer {token}"})
     return session
