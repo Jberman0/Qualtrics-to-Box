@@ -32,7 +32,8 @@ token_expires_at = None
 def get_jwt_assertion():
     claims = {
         'iss': BOX_CLIENT_ID,
-        'sub': BOX_ENTERPRISE_ID,    
+        'sub': BOX_ENTERPRISE_ID,
+        'box_sub_type': 'enterprise',
         'aud': BOX_TOKEN_URL,
         'jti': os.urandom(24).hex(),
         'exp': int(time.time()) + 45
