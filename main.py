@@ -95,7 +95,6 @@ def ensure_valid_folder_id(folder_id, default_folder_id=DEFAULT_BOX_FOLDER_ID):
 
 def box_file_id(filename, folder_id, retries=3, delay=2):
     """Return Box file_id if file exists, else None."""
-    folder_id = ensure_valid_folder_id(folder_id)
     folder_url = f"https://api.box.com/2.0/folders/{folder_id}/items"
     for attempt in range(retries):
         try:
@@ -124,7 +123,6 @@ def get_unique_filename(base_filename, folder_id):
     return filename
 
 def upload_file(filename, content, folder_id):
-    folder_id = ensure_valid_folder_id(folder_id)
     session = get_session()
     files = {
         'attributes': (None, json.dumps({"name": filename, "parent": {"id": folder_id}}), 'application/json'),
@@ -139,7 +137,6 @@ def upload_file(filename, content, folder_id):
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
 
 def update_master_csv(fieldnames, group_row, question_row, data_row, folder_id, master_filename):
-    folder_id = ensure_valid_folder_id(folder_id)
     file_id = box_file_id(master_filename, folder_id)
     session = get_session()
     if file_id:
@@ -201,8 +198,7 @@ def webhook():
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
 
-    folder_id = data.get("box_folder_id")
-    folder_id = ensure_valid_folder_id(folder_id)
+    folder_id = ensure_valid_folder_id(data.get("box_folder_id"))
 
     source = data.get("source", "unknown")
     response_data = data.get("response", {})
