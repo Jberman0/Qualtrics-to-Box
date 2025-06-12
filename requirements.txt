@@ -3,3 +3,4 @@ requests
 gunicorn
 python-dateutil
 PyJWT
+cryptography
