@@ -182,6 +182,14 @@ def update_master_csv(session, fieldnames, group_row, question_row, data_row, fo
     else:
         print(f"❌ Master update failed: {resp.text}")
 
+def _to_csv(group_row, question_row, data_row):
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(group_row)
+    writer.writerow(question_row)
+    writer.writerow(data_row)
+    return buf.getvalue()
+
 def get_formatted_date(response_data):
     raw_date = response_data.get("date")
     if not raw_date or not str(raw_date).strip():
