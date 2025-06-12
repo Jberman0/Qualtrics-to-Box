@@ -169,18 +169,20 @@ def update_master_csv(session, fieldnames, group_row, question_row, data_row, fo
 
     writer.writerow(data_row)
 
-    # Update content (using old name, for now)
-    files = {'file': (old_name if file_id else new_master_name, buf.getvalue(), 'text/csv')}
-    update_url = BOX_UPDATE_URL.format(file_id=file_id) if file_id else BOX_UPLOAD_URL
-    resp = session.post(update_url, files=files)
-
-    if resp.status_code in (200, 201):
-        print(f"✅ Updated master content")
-        # Rename if needed
-        if file_id and old_name != new_master_name:
-            rename_file(file_id, new_master_name, session)
+    if file_id:
+        # Update existing file
+        files = {'file': (old_name, buf.getvalue(), 'text/csv')}
+        resp = session.post(BOX_UPDATE_URL.format(file_id=file_id), files=files)
+        if resp.status_code in (200, 201):
+            print(f"✅ Updated master content")
+            if old_name != new_master_name:
+                rename_file(file_id, new_master_name, session)
+        else:
+            print(f"❌ Master update failed: {resp.text}")
     else:
-        print(f"❌ Master update failed: {resp.text}")
+        # Create new file
+        upload_file(session, new_master_name, buf.getvalue(), folder_id)
+        print("✅ Created new master CSV")
 
 def _to_csv(group_row, question_row, data_row):
     buf = io.StringIO()
