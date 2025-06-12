@@ -120,45 +120,67 @@ def upload_file(session, filename, content, folder_id):
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
 
-def update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, master_filename, entries):
-    file_id = get_file_id_from_entries(master_filename, entries)
-    if file_id:
-        resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
-        if resp.status_code == 200:
-            existing_content = resp.content.decode()
-            existing_reader = csv.reader(io.StringIO(existing_content))
-            existing_rows = list(existing_reader)
-            existing_data_rows = existing_rows[2:] if len(existing_rows) >= 2 else []
-            all_data_rows = existing_data_rows + [data_row]
-            buf = io.StringIO()
-            writer = csv.writer(buf)
-            writer.writerow(group_row)
-            writer.writerow(question_row)
-            writer.writerows(all_data_rows)
-            files = {'file': (master_filename, buf.getvalue(), 'text/csv')}
-            resp2 = session.post(BOX_UPDATE_URL.format(file_id=file_id), files=files)
-            if resp2.status_code == 201:
-                print(f"✅ Updated master CSV ({len(all_data_rows)} rows)")
-            else:
-                print(f"❌ Master update failed ({resp2.status_code}): {resp2.text}")
-        else:
-            print(f"❌ Failed to download master ({resp.status_code})")
-    else:
-        buf = io.StringIO()
-        writer = csv.writer(buf)
-        writer.writerow(group_row)
-        writer.writerow(question_row)
-        writer.writerow(data_row)
-        upload_file(session, master_filename, buf.getvalue(), folder_id)
-        print("✅ Created new master CSV")
+def find_source_master_file(entries, source):
+    """Finds the current master file for the given source (ignoring date)."""
+    prefix = f"slb_{source}_master_"
+    for entry in entries or []:
+        if entry.get("type") == "file" and entry.get("name", "").startswith(prefix):
+            return entry["id"], entry["name"]
+    return None, None
 
-def _to_csv(group_row, question_row, data_row):
+def rename_file(file_id, new_name, session):
+    """Renames a Box file given its ID and the new name."""
+    patch_url = f"https://api.box.com/2.0/files/{file_id}"
+    patch_data = {"name": new_name}
+    resp = session.put(patch_url, 
+                     data=json.dumps(patch_data),
+                     headers={"Content-Type": "application/json"})
+    if resp.status_code == 200:
+        print(f"✅ Renamed to {new_name}")
+    else:
+        print(f"⚠️ Rename failed: {resp.text}")
+
+def update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, formatted_date_str, entries):
+    """
+    1. Find the current master file for this source (ignoring date).
+    2. Download it (if it exists), append new row, upload.
+    3. If the filename doesn't match the current date, rename.
+    """
+    file_id, old_name = find_source_master_file(entries, source)
+    new_master_name = f"slb_{source}_master_{formatted_date_str}.csv"
+
+    # Prepare content
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(group_row)
-    writer.writerow(question_row)
+
+    if file_id:
+        # Download and append to existing
+        resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
+        if resp.status_code == 200:
+            existing_rows = list(csv.reader(io.StringIO(resp.content.decode())))
+            writer.writerows(existing_rows)  # Keep all previous data
+        else:
+            print(f"⚠️ Couldn't download, starting fresh")
+            writer.writerow(group_row)
+            writer.writerow(question_row)
+    else:
+        writer.writerow(group_row)
+        writer.writerow(question_row)
+
     writer.writerow(data_row)
-    return buf.getvalue()
+
+    # Update content (using old name, for now)
+    files = {'file': (old_name if file_id else new_master_name, buf.getvalue(), 'text/csv')}
+    update_url = BOX_UPDATE_URL.format(file_id=file_id) if file_id else BOX_UPLOAD_URL
+    resp = session.post(update_url, files=files)
+
+    if resp.status_code in (200, 201):
+        print(f"✅ Updated master content")
+        # Rename if needed
+        if file_id and old_name != new_master_name:
+            rename_file(file_id, new_master_name, session)
+    else:
+        print(f"❌ Master update failed: {resp.text}")
 
 def get_formatted_date(response_data):
     raw_date = response_data.get("date")
@@ -217,7 +239,7 @@ def webhook():
 
     if do_master:
         try:
-            update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, master_filename, entries)
+            update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, formatted_date_str, entries)
         except Exception as e:
             print(f"❌ Master update error: {e}")
 
