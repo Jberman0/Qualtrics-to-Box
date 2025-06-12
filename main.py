@@ -8,6 +8,7 @@ import requests
 from datetime import datetime, timedelta
 from dateutil import parser
 import jwt
+import re
 
 # ------------------------ JWT CONFIGURATION ------------------------
 BOX_CLIENT_ID      = os.environ.get("BOX_CLIENT_ID")
