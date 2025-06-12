@@ -14,7 +14,6 @@ BOX_CLIENT_ID      = os.environ.get("BOX_CLIENT_ID")
 BOX_CLIENT_SECRET  = os.environ.get("BOX_CLIENT_SECRET")
 BOX_APP_USER_ID    = os.environ.get("BOX_APP_USER_ID")   
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY") 
-BOX_JWT_PASSPHRASE = os.environ.get("BOX_JWT_PASSPHRASE")
 EXPECTED_TOKEN     = os.environ.get("EXPECTED_TOKEN")
 
 DEFAULT_BOX_FOLDER_ID = "314409658870"
@@ -39,7 +38,6 @@ def get_jwt_assertion():
         'jti': os.urandom(24).hex(),
         'exp': int(time.time()) + 45
     }
-    key_pass = BOX_JWT_PASSPHRASE if BOX_JWT_PASSPHRASE else None
     return jwt.encode(
         claims,
         BOX_JWT_PRIVATE_KEY,
