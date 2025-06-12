@@ -15,7 +15,7 @@ BOX_CLIENT_SECRET  = os.environ.get("BOX_CLIENT_SECRET")
 BOX_ENTERPRISE_ID  = os.environ.get("BOX_ENTERPRISE_ID")
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY")
 EXPECTED_TOKEN     = os.environ.get("EXPECTED_TOKEN")
-DEFAULT_BOX_FOLDER_ID = "325808092408"
+DEFAULT_BOX_FOLDER_ID = "314409658870"
 
 # Box API endpoints
 BOX_TOKEN_URL   = "https://api.box.com/oauth2/token"
