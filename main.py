@@ -12,7 +12,7 @@ import jwt  # PyJWT, not the built-in Python 'jwt' package
 # ------------------------ JWT CONFIGURATION ------------------------
 BOX_CLIENT_ID      = os.environ.get("BOX_CLIENT_ID")
 BOX_CLIENT_SECRET  = os.environ.get("BOX_CLIENT_SECRET")
-BOX_APP_USER_ID    = os.environ.get("BOX_APP_USER_ID")   
+BOX_ENTERPRISE_ID = os.environ.get("BOX_ENTERPRISE_ID")
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY") 
 EXPECTED_TOKEN     = os.environ.get("EXPECTED_TOKEN")
 
@@ -32,8 +32,7 @@ token_expires_at = None
 def get_jwt_assertion():
     claims = {
         'iss': BOX_CLIENT_ID,
-        'sub': BOX_APP_USER_ID,        
-        'box_sub_type': 'user',     
+        'sub': BOX_ENTERPRISE_ID,    
         'aud': BOX_TOKEN_URL,
         'jti': os.urandom(24).hex(),
         'exp': int(time.time()) + 45
