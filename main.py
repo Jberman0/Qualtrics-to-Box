@@ -7,7 +7,7 @@ from flask import Flask, request, jsonify
 import requests
 from datetime import datetime, timedelta
 from dateutil import parser
-import jwt 
+import jwt
 
 # ------------------------ JWT CONFIGURATION ------------------------
 BOX_CLIENT_ID      = os.environ.get("BOX_CLIENT_ID")
@@ -23,7 +23,6 @@ BOX_UPLOAD_URL  = "https://upload.box.com/api/2.0/files/content"
 BOX_DOWNLOAD_URL = "https://api.box.com/2.0/files/{file_id}/content"
 BOX_UPDATE_URL   = "https://upload.box.com/api/2.0/files/{file_id}/content"
 
-# ------------------------ JWT TOKEN HANDLING -----------------------
 access_token = None
 token_expires_at = None
 
@@ -36,11 +35,7 @@ def get_jwt_assertion():
         'jti': os.urandom(24).hex(),
         'exp': int(time.time()) + 45
     }
-    return jwt.encode(
-        claims,
-        BOX_JWT_PRIVATE_KEY,
-        algorithm='RS512'
-    )
+    return jwt.encode(claims, BOX_JWT_PRIVATE_KEY, algorithm='RS512')
 
 def refresh_access_token():
     global access_token, token_expires_at
@@ -75,55 +70,44 @@ def get_session():
     session.headers.update({"Authorization": f"Bearer {token}"})
     return session
 
-# ------------- BOX UTILITIES ---------------
-def ensure_valid_folder_id(folder_id, default_folder_id=DEFAULT_BOX_FOLDER_ID):
+def get_folder_entries(session, folder_id):
+    """Returns entries for a folder. If folder doesn't exist, return None."""
+    folder_url = f"https://api.box.com/2.0/folders/{folder_id}/items"
+    resp = session.get(folder_url, timeout=10)
+    if resp.status_code == 200:
+        return resp.json().get("entries", [])
+    else:
+        print(f"⚠️ Box folder listing failed ({resp.status_code}): {resp.text}")
+        return None
+
+def ensure_valid_folder_id(session, folder_id, default_folder_id=DEFAULT_BOX_FOLDER_ID):
     """Return folder_id if it exists, otherwise default."""
     if not folder_id:
         return default_folder_id
-    folder_url = f"https://api.box.com/2.0/folders/{folder_id}/items"
-    try:
-        session = get_session()
-        resp = session.get(folder_url, timeout=10)
-        if resp.status_code == 200:
-            return folder_id
-        else:
-            print(f"⚠️ Folder {folder_id} not found (status {resp.status_code}), defaulting to {default_folder_id}")
-            return default_folder_id
-    except Exception as e:
-        print(f"⚠️ Could not check folder {folder_id} ({e}), defaulting to {default_folder_id}")
+    entries = get_folder_entries(session, folder_id)
+    if entries is not None:
+        return folder_id
+    else:
+        print(f"⚠️ Folder {folder_id} not found, defaulting to {default_folder_id}")
         return default_folder_id
 
-def box_file_id(filename, folder_id, retries=3, delay=2):
-    """Return Box file_id if file exists, else None."""
-    folder_url = f"https://api.box.com/2.0/folders/{folder_id}/items"
-    for attempt in range(retries):
-        try:
-            session = get_session()
-            resp = session.get(folder_url, timeout=10)
-            if resp.status_code == 200:
-                for entry in resp.json().get("entries", []):
-                    if entry.get("name") == filename and entry.get("type") == "file":
-                        return entry.get("id")
-                return None
-            else:
-                print(f"⚠️ Box folder listing failed ({resp.status_code}): {resp.text}")
-        except Exception as e:
-            print(f"⚠️ Box connection failed (attempt {attempt+1}): {e}")
-            time.sleep(delay)
-    raise ConnectionError(f"Unable to check file '{filename}' in Box after {retries} attempts.")
+def get_file_id_from_entries(filename, entries):
+    """Get file_id from Box folder entries, or None if not found."""
+    for entry in entries:
+        if entry.get("name") == filename and entry.get("type") == "file":
+            return entry.get("id")
+    return None
 
-def get_unique_filename(base_filename, folder_id):
-    """Find a unique filename in the given Box folder."""
+def get_unique_filename(base_filename, entries):
     name, ext = os.path.splitext(base_filename)
     count = 1
     filename = base_filename
-    while box_file_id(filename, folder_id):
+    while get_file_id_from_entries(filename, entries):
         filename = f"{name}_{count}{ext}"
         count += 1
     return filename
 
-def upload_file(filename, content, folder_id):
-    session = get_session()
+def upload_file(session, filename, content, folder_id):
     files = {
         'attributes': (None, json.dumps({"name": filename, "parent": {"id": folder_id}}), 'application/json'),
         'file': (filename, content, 'text/csv')
@@ -136,9 +120,8 @@ def upload_file(filename, content, folder_id):
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
 
-def update_master_csv(fieldnames, group_row, question_row, data_row, folder_id, master_filename):
-    file_id = box_file_id(master_filename, folder_id)
-    session = get_session()
+def update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, master_filename, entries):
+    file_id = get_file_id_from_entries(master_filename, entries)
     if file_id:
         resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
         if resp.status_code == 200:
@@ -166,7 +149,7 @@ def update_master_csv(fieldnames, group_row, question_row, data_row, folder_id, 
         writer.writerow(group_row)
         writer.writerow(question_row)
         writer.writerow(data_row)
-        upload_file(master_filename, buf.getvalue(), folder_id)
+        upload_file(session, master_filename, buf.getvalue(), folder_id)
         print("✅ Created new master CSV")
 
 def _to_csv(group_row, question_row, data_row):
@@ -198,7 +181,15 @@ def webhook():
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
 
-    folder_id = ensure_valid_folder_id(data.get("box_folder_id"))
+    # --- Session and Folder ---
+    session = get_session()
+    requested_folder_id = data.get("box_folder_id")
+    folder_id = ensure_valid_folder_id(session, requested_folder_id)
+    entries = get_folder_entries(session, folder_id)
+    if entries is None:
+        # If folder still doesn't exist, use default
+        folder_id = DEFAULT_BOX_FOLDER_ID
+        entries = get_folder_entries(session, folder_id)
 
     source = data.get("source", "unknown")
     response_data = data.get("response", {})
@@ -219,14 +210,14 @@ def webhook():
     participant_id = response_data.get("participantID", "unknown")
     individual_name = f"slb_feedback_{participant_id}_{formatted_date_str}.csv"
     try:
-        unique_name = get_unique_filename(individual_name, folder_id)
-        upload_file(unique_name, _to_csv(group_row, question_row, data_row), folder_id)
+        unique_name = get_unique_filename(individual_name, entries)
+        upload_file(session, unique_name, _to_csv(group_row, question_row, data_row), folder_id)
     except Exception as e:
         print(f"❌ Upload file error: {e}")
 
     if do_master:
         try:
-            update_master_csv(fieldnames, group_row, question_row, data_row, folder_id, master_filename)
+            update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, master_filename, entries)
         except Exception as e:
             print(f"❌ Master update error: {e}")
 
