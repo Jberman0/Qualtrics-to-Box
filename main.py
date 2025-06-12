@@ -41,8 +41,7 @@ def get_jwt_assertion():
     return jwt.encode(
         claims,
         BOX_JWT_PRIVATE_KEY,
-        algorithm='RS512',
-        passphrase=key_pass
+        algorithm='RS512'
     )
 
 def refresh_access_token():
