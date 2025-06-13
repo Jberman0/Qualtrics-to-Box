@@ -195,6 +195,7 @@ def _to_csv(group_row, question_row, data_row):
 def get_formatted_date(response_data):
     raw_date = response_data.get("date")
     if not raw_date or not str(raw_date).strip():
+        tz = pytz.timezone('US/Eastern')
         return datetime.now().strftime("%m-%d-%Y")
     date_str = str(raw_date).strip().replace("/", "-")
     try:
@@ -202,6 +203,7 @@ def get_formatted_date(response_data):
         return dt.strftime("%m-%d-%Y")
     except Exception as e:
         print(f"⚠️ Could not parse date '{raw_date}', defaulting to today. ({e})")
+        tz = pytz.timezone('US/Eastern')
         return datetime.now().strftime("%m-%d-%Y")
 
 # ------------------------ FLASK ROUTE -----------------------------
