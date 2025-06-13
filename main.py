@@ -195,18 +195,18 @@ def _to_csv(group_row, question_row, data_row):
 
 def get_formatted_date(response_data):
     raw_date = response_data.get("date")
+    tz = pytz.timezone('US/Eastern')
+    today = datetime.now(tz).strftime("%m-%d-%Y")
     if not raw_date or not str(raw_date).strip():
-        tz = pytz.timezone('US/Eastern')
-        return datetime.now().strftime("%m-%d-%Y")
+        print(f"⚠️ No date found, defaulting to today - {today}.")
+        return today
     date_str = str(raw_date).strip().replace("/", "-")
     try:
         dt = parser.parse(date_str, dayfirst=False, yearfirst=False)
         return dt.strftime("%m-%d-%Y")
     except Exception as e:
-        print(f"⚠️ Could not parse date '{raw_date}', defaulting to today. ({e})")
-        tz = pytz.timezone('US/Eastern')
-        return datetime.now().strftime("%m-%d-%Y")
-
+        print(f"⚠️ Could not parse date '{raw_date}', defaulting to today - {today}. ({e})")
+        return today
 # ------------------------ FLASK ROUTE -----------------------------
 app = Flask(__name__)
 
