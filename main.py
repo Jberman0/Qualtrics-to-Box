@@ -243,7 +243,7 @@ def webhook():
     data_row = [response_data.get(f, "") for f in fieldnames]
 
     participant_id = response_data.get("participantID", "unknown")
-    individual_name = f"slb_feedback_{participant_id}_{formatted_date_str}.csv"
+    individual_name = f"slb_{source}_{participant_id}_{formatted_date_str}.csv"
     try:
         unique_name = get_unique_filename(individual_name, entries)
         upload_file(session, unique_name, _to_csv(group_row, question_row, data_row), folder_id)
