@@ -212,6 +212,15 @@ app = Flask(__name__)
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
+    import sys
+    print("==== RAW BODY ====")
+    print(request.data.decode(), file=sys.stderr)
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        data = {}
+    print("==== PARSED JSON ====")
+    print(data, file=sys.stderr)
     data = request.get_json(force=True)
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
