@@ -339,7 +339,7 @@ def webhook():
     
     # Extract data
     source = data.get("source", "unknown")
-    study_type = data.get("type", "fMRI")
+    study_type = data.get("study_type", "fMRI")
     response_data = data.get("response", {})
     formatted_date_str = get_formatted_date(response_data)
     
