@@ -121,9 +121,9 @@ def upload_file(session, filename, content, folder_id):
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
 
-def find_source_master_file(entries, source):
+def find_source_master_file(entries, source, study_type):
     """Finds the current master file for the given source (ignoring date)."""
-    prefix = f"slb_{source}_master_"
+    prefix = f"{study_type}_{source}_master_"
     for entry in entries or []:
         if entry.get("type") == "file" and entry.get("name", "").startswith(prefix):
             return entry["id"], entry["name"]
@@ -141,14 +141,14 @@ def rename_file(file_id, new_name, session):
     else:
         print(f"⚠️ Rename failed: {resp.text}")
 
-def update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, formatted_date_str, entries):
+def update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, study_type, formatted_date_str, entries):
     """
     1. Find the current master file for this source (ignoring date).
     2. Download it (if it exists), append new row, upload.
     3. If the filename doesn't match the current date, rename.
     """
-    file_id, old_name = find_source_master_file(entries, source)
-    new_master_name = f"slb_{source}_master_{formatted_date_str}.csv"
+    file_id, old_name = find_source_master_file(entries, source, study_type)
+    new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
 
     # Prepare content
     buf = io.StringIO()
@@ -212,15 +212,15 @@ app = Flask(__name__)
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    import sys
-    print("==== RAW BODY ====")
-    print(request.data.decode(), file=sys.stderr)
-    try:
-        data = request.get_json(force=True)
-    except Exception as e:
-        data = {}
-    print("==== PARSED JSON ====")
-    print(data, file=sys.stderr)
+    # import sys
+    # print("==== RAW BODY ====")
+    # print(request.data.decode(), file=sys.stderr)
+    # try:
+    #     data = request.get_json(force=True)
+    # except Exception as e:
+    #     data = {}
+    # print("==== PARSED JSON ====")
+    # print(data, file=sys.stderr)
     data = request.get_json(force=True)
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
@@ -236,9 +236,10 @@ def webhook():
         entries = get_folder_entries(session, folder_id)
 
     source = data.get("source", "unknown")
+    study_type = data.get("type", "fMRI")
     response_data = data.get("response", {})
     formatted_date_str = get_formatted_date(response_data)
-    master_filename = f"slb_{source}_master_{formatted_date_str}.csv"
+    master_filename = f"{study_type}_{source}_master_{formatted_date_str}.csv"
     do_master = data.get("master") if "master" in data else True
 
     order = data.get("order", [])
@@ -252,7 +253,7 @@ def webhook():
     data_row = [response_data.get(f, "") for f in fieldnames]
 
     participant_id = response_data.get("participantID", "unknown")
-    individual_name = f"slb_{source}_{participant_id}_{formatted_date_str}.csv"
+    individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
     try:
         unique_name = get_unique_filename(individual_name, entries)
         upload_file(session, unique_name, _to_csv(group_row, question_row, data_row), folder_id)
@@ -261,7 +262,7 @@ def webhook():
 
     if do_master:
         try:
-            update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, formatted_date_str, entries)
+            update_master_csv(session, fieldnames, group_row, question_row, data_row, folder_id, source, study_type, formatted_date_str, entries)
         except Exception as e:
             print(f"❌ Master update error: {e}")
 
