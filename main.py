@@ -351,7 +351,7 @@ def webhook():
     
     # Prepare CSV rows
     fieldnames = order
-    group_row = [groupings.get(f, f) for f in fieldnames]
+    group_row = fieldnames.copy()
     question_row = [questions.get(f, f) for f in fieldnames]
     data_row = [response_data.get(f, "") for f in fieldnames]
     
