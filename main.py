@@ -111,16 +111,25 @@ def get_file_id_from_entries(filename, entries):
             return entry.get("id")
     return None
 
-def get_unique_filename(base_filename, entries):
-    """Generate unique filename by appending counter if needed."""
-    name, ext = os.path.splitext(base_filename)
-    count = 1
-    filename = base_filename
-    
-    while get_file_id_from_entries(filename, entries):
-        filename = f"{name}_{count}{ext}"
-        count += 1
-    return filename
+def get_unique_filename(base_filename, entries, participant_id=None, study_type=None, source=None, date_str=None):
+    """Generate unique filename by appending counter after participant_id if needed."""
+    if participant_id and study_type and source and date_str:
+        # Pattern: {study_type}_{source}_{participant_id}_{counter}_{date_str}.csv
+        count = 1
+        filename = f"{study_type}_{source}_{participant_id}_{date_str}.csv"
+        while get_file_id_from_entries(filename, entries):
+            filename = f"{study_type}_{source}_{participant_id}_{count}_{date_str}.csv"
+            count += 1
+        return filename
+    else:
+        # Fallback to old logic if not enough info
+        name, ext = os.path.splitext(base_filename)
+        count = 1
+        filename = base_filename
+        while get_file_id_from_entries(filename, entries):
+            filename = f"{name}_{count}{ext}"
+            count += 1
+        return filename
 
 def upload_file(session, filename, content, folder_id):
     """Upload file to Box folder."""
@@ -293,10 +302,12 @@ def process_individual_file_upload(session, data, entries, folder_id,
     """Handle individual participant file upload."""
     response_data = data.get("response", {})
     participant_id = response_data.get("participantID", "").strip() or "unknown"
+    # Build base name without counter
     individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
-    
     try:
-        unique_name = get_unique_filename(individual_name, entries)
+        unique_name = get_unique_filename( individual_name, entries, participant_id=participant_id, 
+                                        study_type=study_type, source=source, date_str=formatted_date_str)
+                                        
         csv_content = create_csv_content(group_row, question_row, data_row)
         upload_file(session, unique_name, csv_content, folder_id)
         return True
