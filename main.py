@@ -353,7 +353,7 @@ def webhook():
     fieldnames = order
     group_row = fieldnames.copy()
     question_row = [questions.get(f, f) for f in fieldnames]
-    data_row = [response_data.get(f, "") for f in fieldnames]
+    data_row = [response_data.get(f, "").strip() or "unknown" for f in fieldnames]
     
     # Setup Box session and folder
     try:
