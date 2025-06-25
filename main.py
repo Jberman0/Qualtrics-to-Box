@@ -292,7 +292,7 @@ def process_individual_file_upload(session, data, entries, folder_id,
                                  source, study_type, formatted_date_str):
     """Handle individual participant file upload."""
     response_data = data.get("response", {})
-    participant_id = response_data.get("participantID", "unknown")
+    participant_id = response_data.get("participantID", "").strip() or "unknown"
     individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
     
     try:
