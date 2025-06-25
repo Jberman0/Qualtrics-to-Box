@@ -82,5 +82,5 @@
     "QID47_5_value": "${q://QID47/SelectedAnswerRecode/5}",
     "QID47_6_choice": "${q://QID47/ChoiceGroup/SelectedAnswers/6}",
     "QID47_6_value": "${q://QID47/SelectedAnswerRecode/6}"
-        }
     }
+}
