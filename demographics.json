@@ -1,8 +1,8 @@
 {
-  "token": "Functional1!",
-  "box_folder_id": "325275808754",
-  "study_type": "slb_fMRI",
-  "source": "postScan",
+  "token": "*",
+  "box_folder_id": "*",
+  "study_type": "*",
+  "source": "*",
   "order": [
     "participantID", "date", "time",
     "QID32_dob", "QID32_pob", "QID33_sex", "QID34_gender", "QID34_genderOther",
