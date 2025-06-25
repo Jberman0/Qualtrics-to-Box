@@ -349,7 +349,7 @@ def webhook():
         return jsonify({"status": "forbidden"}), 403
     
     # Extract data
-    source = data.get("source", "unknown")
+    source = data.get("source", "").strip() or "unknown"
     study_type = data.get("study_type", "fMRI")
     response_data = data.get("response", {})
     formatted_date_str = get_formatted_date(response_data)
@@ -364,7 +364,7 @@ def webhook():
     fieldnames = order
     group_row = fieldnames.copy()
     question_row = [questions.get(f, f) for f in fieldnames]
-    data_row = [response_data.get(f, "").strip() or "unknown" for f in fieldnames]
+    data_row = [response_data.get(f, "") for f in fieldnames]
     
     # Setup Box session and folder
     try:
