@@ -18,15 +18,19 @@
     "QID7_41_choice", "QID7_41_value", "QID7_42_choice", "QID7_42_value"
   ],
   "reverse": {
-    "min": 1,
-    "max": 5,
-    "items": [
-      "QID7_8_value",
-      "QID7_15_value",
-      "QID7_19_value",
-      "QID7_23_value",
-      "QID7_28_value"
-    ]
+    "survey": {
+      "cati": {
+        "min": 1,
+        "max": 5,
+        "items": [
+          "QID7_8_value",
+          "QID7_15_value",
+          "QID7_19_value",
+          "QID7_23_value",
+          "QID7_28_value"
+        ]
+      }
+    }
   },
   "questions": {
     "participantID": "participantID",
