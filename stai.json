@@ -1,10 +1,11 @@
 {
-  "token": "*",
+  "token": "*!",
   "box_folder_id": "*",
   "study_type": "*",
-  "source": "*",
+  "source": "*", 
   "order": [
     "participantID", "date", "time",
+    "QID9_stai_stateRaw", "QID9_stai_stateSummary", "QID9_stai_traitRaw", "QID9_stai_traitSummary",
     "QID9_1_choice", "QID9_1_value", "QID9_2_choice", "QID9_2_value", "QID9_3_choice", "QID9_3_value", "QID9_4_choice", "QID9_4_value", "QID9_5_choice", "QID9_5_value",
     "QID9_6_choice", "QID9_6_value", "QID9_7_choice", "QID9_7_value", "QID9_8_choice", "QID9_8_value", "QID9_9_choice", "QID9_9_value", "QID9_10_choice", "QID9_10_value",
     "QID9_11_choice", "QID9_11_value", "QID9_12_choice", "QID9_12_value", "QID9_13_choice", "QID9_13_value", "QID9_14_choice", "QID9_14_value", "QID9_15_choice", "QID9_15_value",
@@ -16,14 +17,14 @@
   ],
   "reverse": {
     "survey": {
-      "stai_9": {
+      "staiState": {
         "min": 1,
         "max": 4,
         "items": [
           "QID9_1_value", "QID9_2_value", "QID9_5_value", "QID9_8_value", "QID9_10_value", "QID9_11_value", "QID9_15_value", "QID9_16_value", "QID9_19_value", "QID9_20_value"
         ]
       },
-      "stai_10": {
+      "staiTrait": {
         "min": 1,
         "max": 4,
         "items": [
@@ -36,6 +37,10 @@
     "participantID": "participantID",
     "date": "date",
     "time": "time",
+    "QID9_stai_stateRaw": "STAI-State Raw Score", 
+    "QID9_stai_stateSummary": "STAI-State Score Summary", 
+    "QID9_stai_traitRaw": "STAI-Trait Raw Score", 
+    "QID9_stai_traitSummary": "STAI-Trait Score Summary",
     "QID9_1_choice": "${q://QID9/ChoiceDescription/1}",
     "QID9_1_value": "${q://QID9/ChoiceDescription/1}",
     "QID9_2_choice": "${q://QID9/ChoiceDescription/2}",
@@ -121,6 +126,10 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
+    "QID9_stai_stateRaw": "${e://Field/STAI-State_ScoreRaw}", 
+    "QID9_stai_stateSummary": "${e://Field/STAI-State_ScoreSummary}", 
+    "QID9_stai_traitRaw": "${e://Field/STAI-Trait_ScoreRaw}", 
+    "QID9_stai_traitSummary": "${e://Field/STAI-Trait_ScoreSummary}",
     "QID9_1_choice": "${q://QID9/ChoiceGroup/SelectedAnswers/1}",
     "QID9_1_value": "${q://QID9/SelectedAnswerRecode/1}",
     "QID9_2_choice": "${q://QID9/ChoiceGroup/SelectedAnswers/2}",
