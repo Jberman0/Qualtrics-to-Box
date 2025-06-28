@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "cati",
   "order": [
     "participantID", "date", "time",
     "QID7_cati_socRaw", "QID7_cati_comRaw", "QID7_cati_camRaw", "QID7_cati_rigRaw",

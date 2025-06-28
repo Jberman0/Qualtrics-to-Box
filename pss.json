@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "pss",
   "order": [
     "participantID", "date", "time",
     "QID24_pss_scoreRaw", "QID24_pss_scoreSummary",

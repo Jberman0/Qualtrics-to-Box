@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "ius12",
   "order": [
     "participantID", "date", "time",
     "QID20_ius12_scoreRaw",

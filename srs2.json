@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "srs2",
   "order": [
     "participantID", "date", "time",
     "QID5_srs2_socialAwarenessRaw", "QID5_srs2_socialAwarenessT", "QID5_srs2_socialCognitionRaw", "QID5_srs2_socialCognitionT", "QID5_srs2_socialCommunicationRaw", "QID5_srs2_socialCommunicationT",

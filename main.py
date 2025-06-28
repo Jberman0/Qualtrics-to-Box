@@ -111,23 +111,30 @@ def get_file_id_from_entries(filename, entries):
             return entry.get("id")
     return None
 
-def get_unique_filename(base_filename, entries, participant_id=None, study_type=None, source=None, date_str=None):
-    """Generate unique filename by appending counter after participant_id if needed."""
+def get_unique_filename(base_filename, entries, participant_id=None, questionnaire=None, study_type=None, source=None, date_str=None):
+    """Generate unique filename by appending counter after participant_id if needed. Supports questionnaire in filename."""
     if participant_id and study_type and source and date_str:
-        # Pattern: {study_type}_{source}_{participant_id}_{counter}_{date_str}.csv
+        # Pattern: {study_type}_{source}_{questionnaire}_{participant_id}_{counter?}_{date_str}.csv
         count = 1
-        filename = f"{study_type}_{source}_{participant_id}_{date_str}.csv"
-        while get_file_id_from_entries(filename, entries):
-            filename = f"{study_type}_{source}_{participant_id}_{count}_{date_str}.csv"
-            count += 1
-        return filename
-    else:
-        # Fallback to old logic if not enough info
-        name, ext = os.path.splitext(base_filename)
-        count = 1
-        filename = base_filename
-        while get_file_id_from_entries(filename, entries):
-            filename = f"{name}_{count}{ext}"
+        if questionnaire != "unknown":
+            filename = f"{study_type}_{source}_{questionnaire}_{participant_id}_{date_str}.csv"
+            base_pattern = f"{study_type}_{source}_{questionnaire}_{participant_id}"
+        else:
+            filename = f"{study_type}_{source}_{participant_id}_{date_str}.csv"
+            base_pattern = f"{study_type}_{source}_{participant_id}"
+        # Find all files that match the base pattern (with or without counter)
+        def matches_pattern(entry_name):
+            if questionnaire != "unknown":
+                prefix = f"{study_type}_{source}_{questionnaire}_{participant_id}"
+            else:
+                prefix = f"{study_type}_{source}_{participant_id}"
+            return entry_name.startswith(prefix)
+        existing_names = [e["name"] for e in entries if e.get("type") == "file" and matches_pattern(e["name"])]
+        while filename in existing_names:
+            if questionnaire and questionnaire != "unknown":
+                filename = f"{study_type}_{source}_{questionnaire}_{participant_id}_{count}_{date_str}.csv"
+            else:
+                filename = f"{study_type}_{source}_{participant_id}_{count}_{date_str}.csv"
             count += 1
         return filename
 
@@ -211,7 +218,7 @@ def download_existing_csv_content(session, file_id):
         print(f"⚠️ Couldn't download existing file, starting fresh")
         return []
 
-def update_master_csv(session, fieldnames, group_row, question_row, data_row, 
+def update_master_csv(session, questionnaire, fieldnames, group_row, question_row, data_row, 
                      folder_id, source, study_type, formatted_date_str, entries):
     """
     Update master CSV file:
@@ -220,7 +227,10 @@ def update_master_csv(session, fieldnames, group_row, question_row, data_row,
     3. Only rename if the new date is greater than the current master date
     """
     file_id, old_name = find_source_master_file(entries, source, study_type)
-    new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
+    if questionnaire != "unknown":
+        new_master_name = f"{study_type}_{source}_{questionnaire}_master_{formatted_date_str}.csv"
+    else:
+        new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
 
     # Prepare CSV content
     buf = io.StringIO()
@@ -295,17 +305,19 @@ def get_formatted_date(response_data):
 
 
 
-def process_individual_file_upload(session, data, entries, folder_id, 
+def process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id, 
                                  group_row, question_row, data_row, 
                                  source, study_type, formatted_date_str):
     """Handle individual participant file upload."""
-    response_data = data.get("response", {})
-    participant_id = response_data.get("participantID", "").strip() or "unknown"
     # Build base name without counter
-    individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
+    if questionnaire != "unknown":
+        individual_name = f"{study_type}_{source}_{questionnaire}_{participant_id}_{formatted_date_str}.csv"
+    else:
+        individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
+
     try:
         unique_name = get_unique_filename( individual_name, entries, participant_id=participant_id, 
-                                        study_type=study_type, source=source, date_str=formatted_date_str)
+                                        questionnaire=questionnaire, study_type=study_type, source=source, date_str=formatted_date_str)
                                         
         csv_content = create_csv_content(group_row, question_row, data_row)
         upload_file(session, unique_name, csv_content, folder_id)
@@ -314,7 +326,7 @@ def process_individual_file_upload(session, data, entries, folder_id,
         print(f"❌ Individual file upload error: {e}")
         return False
 
-def process_master_file_update(session, data, entries, folder_id,
+def process_master_file_update(session, data, entries, questionnaire, folder_id,
                               fieldnames, group_row, question_row, data_row,
                               source, study_type, formatted_date_str):
     """Handle master CSV file update."""
@@ -325,7 +337,7 @@ def process_master_file_update(session, data, entries, folder_id,
         return True
     
     try:
-        update_master_csv(session, fieldnames, group_row, question_row, data_row,
+        update_master_csv(session, questionnaire, fieldnames, group_row, question_row, data_row,
                          folder_id, source, study_type, formatted_date_str, entries)
         return True
     except Exception as e:
@@ -348,12 +360,12 @@ def webhook():
         return jsonify({"status": "forbidden"}), 403
     
     # Extract data
-    source = data.get("source", "").strip() or "unknown"
+    source = data.get("source", "").strip() or "unknownSource"
     study_type = data.get("study_type", "fMRI")
     response_data = data.get("response", {})
-    participant_id = response_data.get("participantID", "").strip() or "unknown"
+    participant_id = response_data.get("participantID", "").strip() or "unknownID"
     formatted_date_str = get_formatted_date(response_data)
-    survey_type = data.get("survey_type", data.get("source", "unknown"))
+    questionnaire = data.get("questionnaire", data.get("questionnaire", "unknown"))
     config = {
         "order": data.get("order", []),
         "questions": data.get("questions", {})
@@ -386,13 +398,13 @@ def webhook():
     success_count = 0
     
     # Individual file upload
-    if process_individual_file_upload(session, data, entries, folder_id,
+    if process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
                                     group_row, question_row, data_row,
                                     source, study_type, formatted_date_str):
         success_count += 1
     
     # Master file update
-    if process_master_file_update(session, data, entries, folder_id,
+    if process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 fieldnames, group_row, question_row, data_row,
                                 source, study_type, formatted_date_str):
         success_count += 1

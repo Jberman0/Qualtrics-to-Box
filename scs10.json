@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "scs10",
   "order": [
     "participantID", "date", "time",
     "QID26_scs10_generalRaw", "QID26_scs10_covertRaw", "QID26_scs10_scoreRaw",

@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "bhitop",
   "order": [
     "participantID", "date", "time",
     "QID16_bHiTop_internalizingRaw", "QID16_bHiTop_somatoformRaw", "QID16_bHiTop_detachmentRaw", "QID16_bHiTop_thghtDisRaw", "QID16_bHiTop_disinhibitionRaw", "QID16_bHiTop_antagonismRaw",

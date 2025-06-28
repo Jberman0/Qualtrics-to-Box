@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "phq9",
   "order": [
     "participantID", "date", "time",
     "QID18_phq9_scoreRaw", "QID18_phq9_scoreSummary",

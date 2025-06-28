@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "ucla-loneliness",
   "order": [
     "participantID", "date", "time",
     "QID28_ucla_scoreRaw",

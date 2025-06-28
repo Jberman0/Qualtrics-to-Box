@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "lsas-sr",
   "order": [
     "participantID", "date", "time",
     "QID13_lsas-sr_anxiousRaw", "QID14_lsas-sr_avoidanceRaw", "QID14_lsas-sr_scoreRaw", "QID14_lsas-sr_scoreSummary",

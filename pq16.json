@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "pq16",
   "order": [
     "participantID", "date", "time",
     "QID30_pq16_distress_score", "QID30_pq16_distress_summary", "QID30_pq16_symptom_score", "QID30_pq16_symptom_summary",

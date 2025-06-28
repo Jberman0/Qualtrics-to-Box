@@ -4,6 +4,7 @@
   "study_type": "*",
   "source": "*",
   "master": "*",
+  "questionnaire": "demographics",
   "order": [
     "participantID", "date", "time",
     "QID32_dob", "QID32_pob", "QID33_sex", "QID34_gender", "QID34_genderOther",
