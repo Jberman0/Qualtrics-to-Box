@@ -1,0 +1,80 @@
+{
+  "token": "*",
+  "box_folder_id": "*",
+  "study_type": "*",
+  "source": "*",
+  "master": false,
+  "order": [
+    "participantID", "date", "time",
+    "QID24_pss_scoreRaw", "QID24_pss_scoreSummary",
+    "QID24_1_choice", "QID24_1_value", "QID24_2_choice", "QID24_2_value", "QID24_3_choice", "QID24_3_value",
+    "QID24_4_choice", "QID24_4_value", "QID24_5_choice", "QID24_5_value", "QID24_6_choice", "QID24_6_value",
+    "QID24_7_choice", "QID24_7_value", "QID24_8_choice", "QID24_8_value", "QID24_9_choice", "QID24_9_value",
+    "QID24_10_choice", "QID24_10_value"
+  ],
+  "reverse": {
+    "survey": {
+      "pss": {
+        "min": 0,
+        "max": 4,
+        "items": [
+          "QID24_4_value", "QID24_5_value", "QID24_7_value", "QID24_8_value"
+        ]
+      }
+    }
+  },
+  "questions": {
+    "participantID": "participantID",
+    "date": "date",
+    "time": "time",
+    "QID24_pss_scoreRaw": "PSS Raw Score",
+    "QID24_pss_scoreSummary": "PSS Score Summary",
+    "QID24_1_choice": "${q://QID24/ChoiceDescription/1}",
+    "QID24_1_value": "${q://QID24/ChoiceDescription/1}",
+    "QID24_2_choice": "${q://QID24/ChoiceDescription/2}",
+    "QID24_2_value": "${q://QID24/ChoiceDescription/2}",
+    "QID24_3_choice": "${q://QID24/ChoiceDescription/3}",
+    "QID24_3_value": "${q://QID24/ChoiceDescription/3}",
+    "QID24_4_choice": "${q://QID24/ChoiceDescription/4}",
+    "QID24_4_value": "${q://QID24/ChoiceDescription/4}",
+    "QID24_5_choice": "${q://QID24/ChoiceDescription/5}",
+    "QID24_5_value": "${q://QID24/ChoiceDescription/5}",
+    "QID24_6_choice": "${q://QID24/ChoiceDescription/6}",
+    "QID24_6_value": "${q://QID24/ChoiceDescription/6}",
+    "QID24_7_choice": "${q://QID24/ChoiceDescription/7}",
+    "QID24_7_value": "${q://QID24/ChoiceDescription/7}",
+    "QID24_8_choice": "${q://QID24/ChoiceDescription/8}",
+    "QID24_8_value": "${q://QID24/ChoiceDescription/8}",
+    "QID24_9_choice": "${q://QID24/ChoiceDescription/9}",
+    "QID24_9_value": "${q://QID24/ChoiceDescription/9}",
+    "QID24_10_choice": "${q://QID24/ChoiceDescription/10}",
+    "QID24_10_value": "${q://QID24/ChoiceDescription/10}"
+  },
+  "response": {
+    "participantID": "${e://Field/Participant_ID}",
+    "date": "${date://CurrentDate/m%2Fd%2FY}",
+    "time": "${date://CurrentTime/ST}",
+    "QID24_pss_scoreRaw": "${e://Field/PSS_ScoreRaw}",
+    "QID24_pss_scoreSummary": "${e://Field/PSS_ScoreSummary}",
+    "QID24_1_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/1}",
+    "QID24_1_value": "${q://QID24/SelectedAnswerRecode/1}",
+    "QID24_2_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/2}",
+    "QID24_2_value": "${q://QID24/SelectedAnswerRecode/2}",
+    "QID24_3_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/3}",
+    "QID24_3_value": "${q://QID24/SelectedAnswerRecode/3}",
+    "QID24_4_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/4}",
+    "QID24_4_value": "${q://QID24/SelectedAnswerRecode/4}",
+    "QID24_5_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/5}",
+    "QID24_5_value": "${q://QID24/SelectedAnswerRecode/5}",
+    "QID24_6_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/6}",
+    "QID24_6_value": "${q://QID24/SelectedAnswerRecode/6}",
+    "QID24_7_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/7}",
+    "QID24_7_value": "${q://QID24/SelectedAnswerRecode/7}",
+    "QID24_8_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/8}",
+    "QID24_8_value": "${q://QID24/SelectedAnswerRecode/8}",
+    "QID24_9_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/9}",
+    "QID24_9_value": "${q://QID24/SelectedAnswerRecode/9}",
+    "QID24_10_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/10}",
+    "QID24_10_value": "${q://QID24/SelectedAnswerRecode/10}"
+  }
+}
