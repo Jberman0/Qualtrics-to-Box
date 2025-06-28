@@ -3,6 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID5_srs2_socialAwarenessRaw", "QID5_srs2_socialAwarenessT", "QID5_srs2_socialCognitionRaw", "QID5_srs2_socialCognitionT", "QID5_srs2_socialCommunicationRaw", "QID5_srs2_socialCommunicationT",

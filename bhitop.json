@@ -3,6 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID16_bHiTop_internalizingRaw", "QID16_bHiTop_somatoformRaw", "QID16_bHiTop_detachmentRaw", "QID16_bHiTop_thghtDisRaw", "QID16_bHiTop_disinhibitionRaw", "QID16_bHiTop_antagonismRaw",

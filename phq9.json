@@ -3,6 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID18_phq9_scoreRaw", "QID18_phq9_scoreSummary",

@@ -3,6 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID13_lsas-sr_anxiousRaw", "QID14_lsas-sr_avoidanceRaw", "QID14_lsas-sr_scoreRaw", "QID14_lsas-sr_scoreSummary",

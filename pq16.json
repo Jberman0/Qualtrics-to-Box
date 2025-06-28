@@ -3,7 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
-  "master": false,
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID30_pq16_distress_score", "QID30_pq16_distress_summary", "QID30_pq16_symptom_score", "QID30_pq16_symptom_summary",

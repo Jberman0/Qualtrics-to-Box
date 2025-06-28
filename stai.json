@@ -2,7 +2,8 @@
   "token": "*",
   "box_folder_id": "*",
   "study_type": "*",
-  "source": "*", 
+  "source": "*",
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID9_stai_stateRaw", "QID9_stai_stateSummary", "QID9_stai_traitRaw", "QID9_stai_traitSummary",

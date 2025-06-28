@@ -3,7 +3,7 @@
   "box_folder_id": "*",
   "study_type": "*",
   "source": "*",
-  "master": false,
+  "master": "*",
   "order": [
     "participantID", "date", "time",
     "QID26_scs10_generalRaw", "QID26_scs10_covertRaw", "QID26_scs10_scoreRaw",
