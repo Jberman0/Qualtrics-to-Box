@@ -28,10 +28,6 @@ BOX_UPDATE_URL = "https://upload.box.com/api/2.0/files/{file_id}/content"
 access_token = None
 token_expires_at = None
 
-# In-memory cache for participant survey data
-participant_cache = {}
-EXPECTED_SURVEYS = ["demographic", "srs2", "cati", "stai", "bhitop", "lsas", "phg9", "ius", "ocir", "pss", "scs10", "ucla", "pq16"]  
-
 # ------------------------ JWT AUTHENTICATION ------------------------
 def get_jwt_assertion():
     """Generate JWT assertion for Box authentication."""
@@ -270,34 +266,6 @@ def update_master_csv(session, fieldnames, group_row, question_row, data_row,
         upload_file(session, new_master_name, csv_content, folder_id)
         print("✅ Created new master CSV")
 
-def combine_and_write_if_complete(participant_id, date, session, entries, folder_id):
-    key = f"{participant_id}_{date}"
-    surveys = participant_cache.get(key, {})
-    if set(surveys.keys()) == set(EXPECTED_SURVEYS):
-        # Merge all configs and responses
-        combined_order = []
-        combined_questions = {}
-        combined_data = {}
-        for survey in EXPECTED_SURVEYS:
-            config = surveys[survey]["config"]
-            response = surveys[survey]["response"]
-            combined_order.extend([f for f in config["order"] if f not in combined_order])
-            combined_questions.update(config["questions"])
-            combined_data.update(response)
-        group_row = combined_order
-        question_row = [combined_questions.get(f, f) for f in combined_order]
-        data_row = [combined_data.get(f, "") for f in combined_order]
-        # Write to master CSV
-        fieldnames = group_row
-        source = "combined"
-        study_type = "combined"
-        formatted_date_str = date
-        update_master_csv(session, fieldnames, group_row, question_row, data_row,
-                         folder_id, source, study_type, formatted_date_str, entries)
-        # Clean up
-        del participant_cache[key]
-
-# ------------------------ UTILITY FUNCTIONS ------------------------
 def create_csv_content(group_row, question_row, data_row):
     """Create CSV content from rows."""
     buf = io.StringIO()
@@ -399,13 +367,6 @@ def webhook():
     question_row = [config["questions"].get(f, f) for f in fieldnames]
     data_row = [response_data.get(f, "") for f in fieldnames]
     
-    # Save to in-memory cache
-    key = f"{participant_id}_{formatted_date_str}"
-    participant_cache.setdefault(key, {})[survey_type] = {
-        "config": config,
-        "response": response_data
-    }
-    
     # Setup Box session and folder
     try:
         session = get_session()
@@ -420,9 +381,6 @@ def webhook():
             
     except Exception as e:
         return jsonify({"status": "error", "message": f"Box authentication failed: {str(e)}"}), 500
-    
-    # Combine and write if all surveys are received
-    combine_and_write_if_complete(participant_id, formatted_date_str, session, entries, folder_id)
     
     # Process uploads
     success_count = 0
