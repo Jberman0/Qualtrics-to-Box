@@ -341,6 +341,7 @@ def webhook():
     """Main webhook endpoint for processing CSV data."""
     try:
         data = request.get_json(force=True)
+        print(data)
     except Exception as e:
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
     
