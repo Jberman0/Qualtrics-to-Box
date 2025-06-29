@@ -363,7 +363,7 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     if questionnaire != "pq16":
         return False
     expected_prefix = f"{study_type}_{source}_"
-    expected_suffix = f"_{participant_id}_{date_str}.csv"
+    expected_suffix = f"_{participant_id}_{formatted_date_str}.csv"
     matching_files = []
     q_to_header = {}
     q_to_label = {}
@@ -427,7 +427,7 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
             merged_label.append(label[j])
             merged_data.append(data[j])
     # Write merged CSV
-    merged_filename = f"{study_type}_{source}_{participant_id}_{date_str}_merged.csv"
+    merged_filename = f"{study_type}_{source}_{participant_id}_{formatted_date_str}_merged.csv"
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(merged_header)
