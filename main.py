@@ -351,7 +351,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         print(f"❌ Master update error: {e}")
         return False
 
-def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, date_str, entries, 
+def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, QUESTIONNAIRE_ORDER=None, questionnaire=None):
     """
     Horizontally merge all questionnaire CSVs for a participant/session (same date) into one CSV.
@@ -503,7 +503,7 @@ def webhook():
         success_count += 1
 
     # Use the global QUESTIONNAIRE_ORDER variable for merging
-    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, date_str, entries, 
+    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
 
