@@ -347,7 +347,7 @@ def get_formatted_date(response_data):
 def process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id, 
                                  group_row, question_row, data_row, 
                                  source, study_type, formatted_date_str):
-                                 
+
     """Handle individual participant file upload."""
     # Build intended filename
     if questionnaire != "unknown":
@@ -543,11 +543,9 @@ def webhook():
         print(f"ℹ️ Skipping master file update - individual file upload was skipped or failed")
 
     # Use the global QUESTIONNAIRE_ORDER variable for merging, only if individual file was uploaded successfully
-    if individual_uploaded and merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
+    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
-    elif not individual_uploaded:
-        print(f"ℹ️ Skipping merged file processing - individual file upload was skipped or failed")
 
     if success_count > 0:
         return jsonify({"status": "success", "message": f"Processed {success_count} operations"}), 200
