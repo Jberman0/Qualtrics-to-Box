@@ -145,6 +145,29 @@ def get_unique_filename(base_filename, entries, participant_id=None, questionnai
             count += 1
         return filename
 
+def get_or_create_subfolder(session, folder_id, subfolder_name="single_file"):
+    """Check if a subfolder exists in the parent folder, create it if not, and return its ID."""
+    entries = get_folder_entries(session, folder_id)
+    if entries is not None:
+        for entry in entries:
+            if entry.get("type") == "folder" and entry.get("name") == subfolder_name:
+                return entry.get("id")
+    
+    # If not found, create the subfolder
+    create_folder_url = "https://api.box.com/2.0/folders"
+    data = {
+        "name": subfolder_name,
+        "parent": {"id": folder_id}
+    }
+    resp = session.post(create_folder_url, json=data)
+    if resp.status_code == 201:
+        new_folder_id = resp.json().get("id")
+        print(f"✅ Created '{subfolder_name}' subfolder with ID {new_folder_id}")
+        return new_folder_id
+    else:
+        print(f"❌ Failed to create '{subfolder_name}' subfolder: {resp.status_code} - {resp.text}")
+        raise Exception(f"Could not create '{subfolder_name}' subfolder")
+
 def upload_file(session, filename, content, folder_id):
     """Upload file to Box folder."""
     files = {
@@ -433,8 +456,11 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     writer.writerow(merged_header)
     writer.writerow(merged_label)
     writer.writerow(merged_data)
-    upload_file(session, merged_filename, buf.getvalue(), folder_id)
-    print(f"Horizontally merged CSV uploaded as {merged_filename}")
+    
+    # Get or create the 'single_file' subfolder for merged files 
+    single_file_folder_id = get_or_create_subfolder(session, folder_id, subfolder_name="single_file")
+    upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id)
+    print(f"Horizontally merged CSV uploaded as {merged_filename} to 'single_file' subfolder")
     return True
 
 # ------------------------ FLASK APPLICATION ------------------------
