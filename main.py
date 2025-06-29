@@ -389,6 +389,12 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
                 q_to_data[q_part] = csv_reader[2]
             else:
                 print(f"Failed to download {filename}")
+    # Always add pq16 from the current in-memory data if not already present
+    if "pq16" not in q_to_header:
+        # Use the current in-memory data (group_row, question_row, data_row)
+        q_to_header["pq16"] = group_row
+        q_to_label["pq16"] = question_row
+        q_to_data["pq16"] = data_row
     if not q_to_header:
         print("No questionnaire files found to merge.")
         return False
