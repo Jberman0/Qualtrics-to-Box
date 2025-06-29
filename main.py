@@ -146,7 +146,16 @@ def get_unique_filename(base_filename, entries, participant_id=None, questionnai
         return filename
 
 def get_or_create_subfolder(session, folder_id, subfolder_name="single_file"):
-    """Check if a subfolder exists in the parent folder, create it if not, and return its ID."""
+    """Check if a subfolder exists within the specified folder, create it if not, and return its ID.
+    
+    Args:
+        session: Authenticated requests session for Box API calls.
+        folder_id: ID of the Box folder to check for or create the subfolder in.
+        subfolder_name: Name of the subfolder to check for or create (default: 'single_file').
+    
+    Returns:
+        str: ID of the existing or newly created subfolder.
+    """
     entries = get_folder_entries(session, folder_id)
     if entries is not None:
         for entry in entries:
@@ -338,19 +347,17 @@ def get_formatted_date(response_data):
 def process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id, 
                                  group_row, question_row, data_row, 
                                  source, study_type, formatted_date_str):
+                                 
     """Handle individual participant file upload."""
-    # Build base name without counter
+    # Build intended filename
     if questionnaire != "unknown":
         individual_name = f"{study_type}_{source}_{questionnaire}_{participant_id}_{formatted_date_str}.csv"
     else:
         individual_name = f"{study_type}_{source}_{participant_id}_{formatted_date_str}.csv"
 
     try:
-        unique_name = get_unique_filename( individual_name, entries, participant_id=participant_id, 
-                                        questionnaire=questionnaire, study_type=study_type, source=source, date_str=formatted_date_str)
-                                        
         csv_content = create_csv_content(group_row, question_row, data_row)
-        upload_file(session, unique_name, csv_content, folder_id)
+        upload_file(session, individual_name, csv_content, folder_id)
         return True
     except Exception as e:
         print(f"❌ Individual file upload error: {e}")
@@ -515,23 +522,32 @@ def webhook():
     
     # Process uploads
     success_count = 0
+    individual_uploaded = False
 
     # Individual file upload
-    if process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
+    individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
                                     group_row, question_row, data_row,
-                                    source, study_type, formatted_date_str):
+                                    source, study_type, formatted_date_str)
+    if individual_result:
         success_count += 1
+        individual_uploaded = True
+    else:
+        print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
 
-    # Master file update
-    if process_master_file_update(session, data, entries, questionnaire, folder_id,
+    # Master file update, only if individual file was uploaded successfully
+    if individual_uploaded and process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 fieldnames, group_row, question_row, data_row,
                                 source, study_type, formatted_date_str):
         success_count += 1
+    elif not individual_uploaded:
+        print(f"ℹ️ Skipping master file update - individual file upload was skipped or failed")
 
-    # Use the global QUESTIONNAIRE_ORDER variable for merging
-    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
+    # Use the global QUESTIONNAIRE_ORDER variable for merging, only if individual file was uploaded successfully
+    if individual_uploaded and merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
+    elif not individual_uploaded:
+        print(f"ℹ️ Skipping merged file processing - individual file upload was skipped or failed")
 
     if success_count > 0:
         return jsonify({"status": "success", "message": f"Processed {success_count} operations"}), 200
