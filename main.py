@@ -362,41 +362,42 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     """
     if questionnaire != "pq16":
         return False
-    pattern = re.compile(
-        rf"^{re.escape(study_type)}_{re.escape(source)}_(.+)_{re.escape(participant_id)}_{re.escape(date_str)}\\.csv$"
-    )
-    matching_files = [
-        e for e in entries
-        if e.get("type") == "file" and pattern.match(e["name"])
-    ]
-    if not matching_files:
-        print("No questionnaire files found to merge.")
-        return False
-    # Map questionnaire name to its header, label, and data
+    expected_prefix = f"{study_type}_{source}_"
+    expected_suffix = f"_{participant_id}_{date_str}.csv"
+    matching_files = []
     q_to_header = {}
     q_to_label = {}
     q_to_data = {}
     shared_cols = ["participantID", "date", "time"]
-    for file_entry in matching_files:
-        file_id = file_entry["id"]
-        m = pattern.match(file_entry["name"])
-        questionnaire_name = m.group(1) if m else None
-        resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
-        if resp.status_code == 200 and questionnaire_name:
-            csv_reader = list(csv.reader(io.StringIO(resp.content.decode())))
-            if len(csv_reader) < 3:
+    for entry in entries:
+        if entry.get("type") != "file":
+            continue
+        filename = entry["name"]
+        if filename.startswith(expected_prefix) and filename.endswith(expected_suffix):
+            q_part = filename[len(expected_prefix):-len(expected_suffix)]
+            # Only include if questionnaire is in questionnaire_order
+            if QUESTIONNAIRE_ORDER and q_part not in QUESTIONNAIRE_ORDER:
                 continue
-            q_to_header[questionnaire_name] = csv_reader[0]
-            q_to_label[questionnaire_name] = csv_reader[1]
-            q_to_data[questionnaire_name] = csv_reader[2]
-        else:
-            print(f"Failed to download {file_entry['name']}")
+            file_id = entry["id"]
+            resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
+            if resp.status_code == 200:
+                csv_reader = list(csv.reader(io.StringIO(resp.content.decode())))
+                if len(csv_reader) < 3:
+                    continue
+                q_to_header[q_part] = csv_reader[0]
+                q_to_label[q_part] = csv_reader[1]
+                q_to_data[q_part] = csv_reader[2]
+            else:
+                print(f"Failed to download {filename}")
+    if not q_to_header:
+        print("No questionnaire files found to merge.")
+        return False
     # Build merged columns in the order: shared_cols + [all columns for each questionnaire in questionnaire_order]
     merged_header = []
     merged_label = []
     merged_data = []
     # Add shared columns from the first questionnaire in order
-    first_q = questionnaire_order[0] if questionnaire_order and questionnaire_order[0] in q_to_header else next(iter(q_to_header))
+    first_q = QUESTIONNAIRE_ORDER[0] if QUESTIONNAIRE_ORDER and QUESTIONNAIRE_ORDER[0] in q_to_header else next(iter(q_to_header))
     first_header = q_to_header[first_q]
     first_label = q_to_label[first_q]
     first_data = q_to_data[first_q]
@@ -407,7 +408,7 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
             merged_label.append(first_label[idx])
             merged_data.append(first_data[idx])
     # Add all columns for each questionnaire in order
-    for q in (questionnaire_order or list(q_to_header.keys())):
+    for q in (QUESTIONNAIRE_ORDER or list(q_to_header.keys())):
         if q not in q_to_header:
             continue
         header = q_to_header[q]
