@@ -503,8 +503,8 @@ def webhook():
         success_count += 1
 
     # Use the global QUESTIONNAIRE_ORDER variable for merging
-    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
-                                QUESTIONNAIRE_ORDER, questionnaire):
+    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, date_str, entries, 
+                        group_row, question_row, data_row, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
 
     if success_count > 0:
