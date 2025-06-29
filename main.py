@@ -466,9 +466,11 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     
     # Get or create the 'single_file' subfolder for merged files 
     single_file_folder_id = get_or_create_subfolder(session, folder_id, subfolder_name="single_file")
-    upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id)
-    print(f"Horizontally merged CSV uploaded as {merged_filename} to 'single_file' subfolder")
-    return True
+    if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
+        print(f"Horizontally merged CSV uploaded as {merged_filename} to 'single_file' subfolder")
+        return True
+    else:
+        return False
 
 # ------------------------ FLASK APPLICATION ------------------------
 app = Flask(__name__)
