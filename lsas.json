@@ -1,9 +1,9 @@
 {
   "token": "*",
-  "box_folder_id": "*",
-  "study_type": "*",
-  "source": "*",
-  "master": "*",
+  "box_folder_id": "325275808754",
+  "study_type": "slb_fMRI",
+  "source": "postScan",
+  "master": false,
   "questionnaire": "lsas-sr",
   "order": [
     "participantID", "date", "time",

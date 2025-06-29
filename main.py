@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 import jwt
 import pytz
+import re
 
 # ------------------------ CONFIGURATION ------------------------
 BOX_CLIENT_ID = os.environ.get("BOX_CLIENT_ID")
@@ -17,6 +18,12 @@ BOX_ENTERPRISE_ID = os.environ.get("BOX_ENTERPRISE_ID")
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY")
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 DEFAULT_BOX_FOLDER_ID = "314409658870"
+
+# Define the questionnaire order as a global variable
+QUESTIONNAIRE_ORDER = [
+    "demographics", "srs2", "cati", "stai", "bhitop", "lsas-sr", "phq9",
+    "ius12", "oci-r", "pss", "scs10", "ucla-loneliness", "pq16"
+]
 
 # Box API endpoints
 BOX_TOKEN_URL = "https://api.box.com/oauth2/token"
@@ -344,6 +351,85 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         print(f"❌ Master update error: {e}")
         return False
 
+def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, date_str, 
+                                entries, QUESTIONNAIRE_ORDER=None, questionnaire=None):
+    """
+    Horizontally merge all questionnaire CSVs for a participant/session (same date) into one CSV.
+    - Each file has two header rows and one data row.
+    - Keep only one set of participantID/date/time columns at the start.
+    - Merge all other columns grouped by questionnaire, in the order specified by questionnaire_order.
+    - Only one data row in the merged file (side-by-side merge).
+    """
+    if questionnaire != "pq16":
+        return False
+    pattern = re.compile(
+        rf"^{re.escape(study_type)}_{re.escape(source)}_(.+)_{re.escape(participant_id)}_{re.escape(date_str)}\\.csv$"
+    )
+    matching_files = [
+        e for e in entries
+        if e.get("type") == "file" and pattern.match(e["name"])
+    ]
+    if not matching_files:
+        print("No questionnaire files found to merge.")
+        return False
+    # Map questionnaire name to its header, label, and data
+    q_to_header = {}
+    q_to_label = {}
+    q_to_data = {}
+    shared_cols = ["participantID", "date", "time"]
+    for file_entry in matching_files:
+        file_id = file_entry["id"]
+        m = pattern.match(file_entry["name"])
+        questionnaire_name = m.group(1) if m else None
+        resp = session.get(BOX_DOWNLOAD_URL.format(file_id=file_id))
+        if resp.status_code == 200 and questionnaire_name:
+            csv_reader = list(csv.reader(io.StringIO(resp.content.decode())))
+            if len(csv_reader) < 3:
+                continue
+            q_to_header[questionnaire_name] = csv_reader[0]
+            q_to_label[questionnaire_name] = csv_reader[1]
+            q_to_data[questionnaire_name] = csv_reader[2]
+        else:
+            print(f"Failed to download {file_entry['name']}")
+    # Build merged columns in the order: shared_cols + [all columns for each questionnaire in questionnaire_order]
+    merged_header = []
+    merged_label = []
+    merged_data = []
+    # Add shared columns from the first questionnaire in order
+    first_q = questionnaire_order[0] if questionnaire_order and questionnaire_order[0] in q_to_header else next(iter(q_to_header))
+    first_header = q_to_header[first_q]
+    first_label = q_to_label[first_q]
+    first_data = q_to_data[first_q]
+    for col in shared_cols:
+        if col in first_header:
+            idx = first_header.index(col)
+            merged_header.append(col)
+            merged_label.append(first_label[idx])
+            merged_data.append(first_data[idx])
+    # Add all columns for each questionnaire in order
+    for q in (questionnaire_order or list(q_to_header.keys())):
+        if q not in q_to_header:
+            continue
+        header = q_to_header[q]
+        label = q_to_label[q]
+        data = q_to_data[q]
+        for j, col in enumerate(header):
+            if col in shared_cols:
+                continue  # skip duplicate shared columns
+            merged_header.append(col)
+            merged_label.append(label[j])
+            merged_data.append(data[j])
+    # Write merged CSV
+    merged_filename = f"{study_type}_{source}_{participant_id}_{date_str}_merged.csv"
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(merged_header)
+    writer.writerow(merged_label)
+    writer.writerow(merged_data)
+    upload_file(session, merged_filename, buf.getvalue(), folder_id)
+    print(f"Horizontally merged CSV uploaded as {merged_filename}")
+    return True
+
 # ------------------------ FLASK APPLICATION ------------------------
 app = Flask(__name__)
 
@@ -396,19 +482,24 @@ def webhook():
     
     # Process uploads
     success_count = 0
-    
+
     # Individual file upload
     if process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
                                     group_row, question_row, data_row,
                                     source, study_type, formatted_date_str):
         success_count += 1
-    
+
     # Master file update
     if process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 fieldnames, group_row, question_row, data_row,
                                 source, study_type, formatted_date_str):
         success_count += 1
-    
+
+    # Use the global QUESTIONNAIRE_ORDER variable for merging
+    if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
+                                QUESTIONNAIRE_ORDER, questionnaire):
+        success_count += 1
+
     if success_count > 0:
         return jsonify({"status": "success", "message": f"Processed {success_count} operations"}), 200
     else:
