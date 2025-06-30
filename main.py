@@ -420,7 +420,6 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
         return False
     expected_prefix = f"{study_type}_{source}_"
     expected_suffix = f"_{participant_id}_{formatted_date_str}.csv"
-    matching_files = []
     q_to_header = {}
     q_to_label = {}
     q_to_data = {}
@@ -531,6 +530,12 @@ def webhook():
     group_row = fieldnames.copy()
     question_row = [config["questions"].get(f, f) for f in fieldnames]
     data_row = [all_response_data.get(f, "") for f in fieldnames]
+
+    # Check if there is any data other than date and time (and participantID)
+    non_empty_fields = [f for f in fieldnames if f not in ("date", "time", "participantID") and str(all_response_data.get(f, "")).strip() != ""]
+    if not non_empty_fields:
+        print("⚠️ No data other than date/time/participantID; skipping CSV write.")
+        return jsonify({"status": "skipped", "message": "No data to write except date/time/participantID."}), 200
     
     # Setup Box session and folder
     try:
