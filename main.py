@@ -381,6 +381,32 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         print(f"❌ Master update error: {e}")
         return False
 
+def apply_reversal_if_needed(response_data, reversal_config):
+    """
+    Return a copy of response_data with specified items reversed if reversal_config is present.
+    All other data is preserved unchanged.
+    """
+    if not reversal_config or not isinstance(reversal_config, dict):
+        return response_data.copy()
+    items = reversal_config.get("items", [])
+    min_val = reversal_config.get("min")
+    max_val = reversal_config.get("max")
+    if not items or min_val is None or max_val is None:
+        return response_data.copy()
+    updated_data = response_data.copy()
+    for item in items:
+        if item in response_data:
+            val = response_data[item]
+            try:
+                num = float(val)
+                reversed_val = max_val - num + min_val
+                if isinstance(val, int) or (isinstance(val, str) and val.isdigit()):
+                    reversed_val = int(reversed_val)
+                updated_data[item] = reversed_val
+            except (TypeError, ValueError):
+                pass
+    return updated_data
+
 def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire=None):
     """
@@ -482,11 +508,9 @@ def webhook():
         data = request.get_json(force=True)
     except Exception as e:
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
-    
     # Check token
     if data.get("token") != EXPECTED_TOKEN:
         return jsonify({"status": "forbidden"}), 403
-    
     # Extract data
     source = data.get("source", "").strip() or "unknownSource"
     study_type = data.get("study_type", "fMRI")
@@ -498,14 +522,15 @@ def webhook():
         "order": data.get("order", []),
         "questions": data.get("questions", {})
     }
-    
     print(f"✅ Received data for source '{source}', study '{study_type}', date '{formatted_date_str}'")
-    
+    # Apply reversal if reverse array is present
+    reversal_config = data.get("reverse")
+    all_response_data = apply_reversal_if_needed(response_data, reversal_config)
     # Prepare CSV rows
     fieldnames = config["order"]
     group_row = fieldnames.copy()
     question_row = [config["questions"].get(f, f) for f in fieldnames]
-    data_row = [response_data.get(f, "") for f in fieldnames]
+    data_row = [all_response_data.get(f, "") for f in fieldnames]
     
     # Setup Box session and folder
     try:

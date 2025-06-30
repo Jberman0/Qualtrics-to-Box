@@ -18,22 +18,12 @@
     "QID10_16_choice", "QID10_16_value", "QID10_17_choice", "QID10_17_value", "QID10_18_choice", "QID10_18_value", "QID10_19_choice", "QID10_19_value", "QID10_20_choice", "QID10_20_value"
   ],
   "reverse": {
-    "survey": {
-      "staiState": {
-        "min": 1,
-        "max": 4,
-        "items": [
-          "QID9_1_value", "QID9_2_value", "QID9_5_value", "QID9_8_value", "QID9_10_value", "QID9_11_value", "QID9_15_value", "QID9_16_value", "QID9_19_value", "QID9_20_value"
-        ]
-      },
-      "staiTrait": {
-        "min": 1,
-        "max": 4,
-        "items": [
-          "QID10_1_value", "QID10_3_value", "QID10_6_value", "QID10_7_value", "QID10_10_value", "QID10_13_value", "QID10_14_value", "QID10_16_value", "QID10_19_value"
-        ]
-      }
-    }
+    "min": 1,
+    "max": 4,
+    "items": [
+      "QID9_1_value", "QID9_2_value", "QID9_5_value", "QID9_8_value", "QID9_10_value", "QID9_11_value", "QID9_15_value", "QID9_16_value", "QID9_19_value", "QID9_20_value",
+      "QID10_1_value", "QID10_3_value", "QID10_6_value", "QID10_7_value", "QID10_10_value", "QID10_13_value", "QID10_14_value", "QID10_16_value", "QID10_19_value"
+    ]
   },
   "questions": {
     "participantID": "participantID",
