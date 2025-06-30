@@ -145,7 +145,7 @@ def get_unique_filename(base_filename, entries, participant_id=None, questionnai
             count += 1
         return filename
 
-def get_or_create_subfolder(session, folder_id, subfolder_name="single_file"):
+def get_or_create_subfolder(session, folder_id, subfolder_name):
     """Check if a subfolder exists within the specified folder, create it if not, and return its ID.
     
     Args:
@@ -382,7 +382,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return False
 
 def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
-                        group_row, question_row, data_row, QUESTIONNAIRE_ORDER=None, questionnaire=None):
+                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER=None, questionnaire=None):
     """
     Horizontally merge all questionnaire CSVs for a participant/session (same date) into one CSV.
     - Each file has two header rows and one data row.
@@ -465,9 +465,9 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     writer.writerow(merged_data)
     
     # Get or create the 'single_file' subfolder for merged files 
-    single_file_folder_id = get_or_create_subfolder(session, folder_id, subfolder_name="single_file")
-    if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
-        print(f"Horizontally merged CSV uploaded as {merged_filename} to '{single_file}' subfolder")
+    single_file_folder_id = get_or_create_subfolder(session, folder_id, subfolder_name)
+    if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id, subfolder_name):
+        print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
         return True
     else:
         return False
@@ -524,7 +524,6 @@ def webhook():
     
     # Process uploads
     success_count = 0
-    individual_uploaded = False
 
     # Individual file upload
     individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
@@ -532,21 +531,19 @@ def webhook():
                                     source, study_type, formatted_date_str)
     if individual_result:
         success_count += 1
-        individual_uploaded = True
     else:
         print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
 
-    # Master file update, only if individual file was uploaded successfully
-    if individual_uploaded and process_master_file_update(session, data, entries, questionnaire, folder_id,
+    # Master file update
+    if process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 fieldnames, group_row, question_row, data_row,
                                 source, study_type, formatted_date_str):
         success_count += 1
-    elif not individual_uploaded:
-        print(f"ℹ️ Skipping master file update - individual file upload was skipped or failed")
 
-    # Use the global QUESTIONNAIRE_ORDER variable for merging, only if individual file was uploaded successfully
+    # Use the global QUESTIONNAIRE_ORDER variable for merging
+    subfolder_name = "single_file"  # Default subfolder name
     if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
-                        group_row, question_row, data_row, QUESTIONNAIRE_ORDER, questionnaire):
+                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
 
     if success_count > 0:
