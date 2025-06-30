@@ -19,7 +19,7 @@ BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY")
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 DEFAULT_BOX_FOLDER_ID = "314409658870"
 
-# Define the questionnaire order as a global variable
+# Define the questionnaire order
 QUESTIONNAIRE_ORDER = [
     "demographics", "srs2", "cati", "stai", "bhitop", "lsas-sr", "phq9",
     "ius12", "oci-r", "pss", "scs10", "ucla-loneliness", "pq16"
