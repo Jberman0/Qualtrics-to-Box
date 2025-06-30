@@ -382,7 +382,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return False
 
 def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
-                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER=None, questionnaire=None):
+                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire=None):
     """
     Horizontally merge all questionnaire CSVs for a participant/session (same date) into one CSV.
     - Each file has two header rows and one data row.
