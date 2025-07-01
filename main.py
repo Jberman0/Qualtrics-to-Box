@@ -383,20 +383,18 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
 
 def apply_reversal_if_needed(response_data, reversal_config):
     """
-    Return a copy of response_data with specified items reversed if reversal_config is present.
+    Return a copy of response_data with items ending in 'R' reversed if reversal_config is present.
     All other data is preserved unchanged.
     """
     if not reversal_config or not isinstance(reversal_config, dict):
         return response_data.copy()
-    items = reversal_config.get("items", [])
     min_val = reversal_config.get("min")
     max_val = reversal_config.get("max")
-    if not items or min_val is None or max_val is None:
+    if min_val is None or max_val is None:
         return response_data.copy()
     updated_data = response_data.copy()
-    for item in items:
-        if item in response_data:
-            val = response_data[item]
+    for item, val in response_data.items():
+        if isinstance(item, str) and item.endswith("R"):
             try:
                 num = float(val)
                 reversed_val = max_val - num + min_val
