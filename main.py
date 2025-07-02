@@ -535,7 +535,7 @@ def webhook():
     # Check if there is any data other than date and time (and participantID)
     non_empty_fields = [f for f in fieldnames if f not in ("date", "time", "participantID") and str(all_response_data.get(f, "")).strip() != ""]
     if not non_empty_fields:
-        print("⚠️ No data other than date/time/participantID - {questionnaire} - skipping CSV write.")
+        print(f"⚠️ No data other than date/time/participantID - {questionnaire} - skipping CSV write.")
         return jsonify({"status": "skipped", "message": "No data to write except date/time/participantID."}), 200
     
     # --- Participant/date subfolder logic ---
