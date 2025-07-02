@@ -406,13 +406,14 @@ def apply_reversal_if_needed(response_data, reversal_config):
     return updated_data
 
 def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
-                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire=None):
+                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire=None, root_folder_id=None):
     """
     Horizontally merge all questionnaire CSVs for a participant/session (same date) into one CSV.
     - Each file has two header rows and one data row.
     - Keep only one set of participantID/date/time columns at the start.
     - Merge all other columns grouped by questionnaire, in the order specified by questionnaire_order.
     - Only one data row in the merged file (side-by-side merge).
+    - The merged file is always saved in the 'single_file' subfolder under the root folder.
     """
     if questionnaire != "pq16":
         return False
@@ -487,8 +488,10 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     writer.writerow(merged_label)
     writer.writerow(merged_data)
     
-    # Get or create the 'single_file' subfolder for merged files 
-    single_file_folder_id = get_or_create_subfolder(session, folder_id, subfolder_name)
+    # Always use the root folder for the single_file subfolder
+    if root_folder_id is None:
+        root_folder_id = folder_id
+    single_file_folder_id = get_or_create_subfolder(session, root_folder_id, subfolder_name)
     if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
         print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
         return True
@@ -535,18 +538,22 @@ def webhook():
         print("⚠️ No data other than date/time/participantID; skipping CSV write.")
         return jsonify({"status": "skipped", "message": "No data to write except date/time/participantID."}), 200
     
-    # Setup Box session and folder
+    # --- Participant/date subfolder logic ---
+    SUBFOLDER_SOURCES = {"postScan"}
     try:
         session = get_session()
         requested_folder_id = data.get("box_folder_id")
         folder_id = ensure_valid_folder_id(session, requested_folder_id)
         entries = get_folder_entries(session, folder_id)
-        
         if entries is None:
             # Fallback to default folder
             folder_id = DEFAULT_BOX_FOLDER_ID
             entries = get_folder_entries(session, folder_id)
-            
+        # If source requires participant/date subfolder, get or create it
+        if source in SUBFOLDER_SOURCES:
+            subfolder_name = f"{participant_id}_{formatted_date_str}"
+            folder_id = get_or_create_subfolder(session, folder_id, subfolder_name)
+            entries = get_folder_entries(session, folder_id)
     except Exception as e:
         return jsonify({"status": "error", "message": f"Box authentication failed: {str(e)}"}), 500
     
@@ -569,7 +576,7 @@ def webhook():
         success_count += 1
 
     # Use the global QUESTIONNAIRE_ORDER variable for merging
-    subfolder_name = "single_file"  # Default subfolder name
+    subfolder_name = "single_file" 
     if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire):
         success_count += 1
