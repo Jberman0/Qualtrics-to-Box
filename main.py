@@ -540,20 +540,19 @@ def webhook():
     
     # --- Participant/date subfolder logic ---
     SUBFOLDER_SOURCES = {"postScan"}
-    # Save the original root folder id before any subfolder switching
-    root_folder_id = folder_id
+
     try:
         session = get_session()
         requested_folder_id = data.get("box_folder_id")
         folder_id = ensure_valid_folder_id(session, requested_folder_id)
         entries = get_folder_entries(session, folder_id)
         if entries is None:
-            # Fallback to default folder
             folder_id = DEFAULT_BOX_FOLDER_ID
             entries = get_folder_entries(session, folder_id)
         # If source requires participant/date subfolder, get or create it
         if source in SUBFOLDER_SOURCES:
             subfolder_name = f"{participant_id}_{formatted_date_str}"
+            root_folder_id = folder_id
             folder_id = get_or_create_subfolder(session, folder_id, subfolder_name)
             entries = get_folder_entries(session, folder_id)
     except Exception as e:
