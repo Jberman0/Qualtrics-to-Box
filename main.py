@@ -118,6 +118,7 @@ def get_file_id_from_entries(filename, entries):
             return entry.get("id")
     return None
 
+# Unused but saving for later reference
 def get_unique_filename(base_filename, entries, participant_id=None, questionnaire=None, study_type=None, source=None, date_str=None):
     """Generate unique filename by appending counter after participant_id if needed. Supports questionnaire in filename."""
     if participant_id and study_type and source and date_str:
@@ -257,7 +258,7 @@ def download_existing_csv_content(session, file_id):
         print(f"⚠️ Couldn't download existing file, starting fresh")
         return []
 
-def update_master_csv(session, questionnaire, fieldnames, group_row, question_row, data_row, 
+def update_master_csv(session, questionnaire, group_row, question_row, data_row, 
                      folder_id, source, study_type, formatted_date_str, entries):
     """
     Update master CSV file:
@@ -364,7 +365,7 @@ def process_individual_file_upload(session, data, entries, participant_id, quest
         return False
 
 def process_master_file_update(session, data, entries, questionnaire, folder_id,
-                              fieldnames, group_row, question_row, data_row,
+                              group_row, question_row, data_row,
                               source, study_type, formatted_date_str):
     """Handle master CSV file update."""
     do_master = data.get("master", True)  # Default to True if not specified
@@ -374,7 +375,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return True
     
     try:
-        update_master_csv(session, questionnaire, fieldnames, group_row, question_row, data_row,
+        update_master_csv(session, questionnaire, group_row, question_row, data_row,
                          folder_id, source, study_type, formatted_date_str, entries)
         return True
     except Exception as e:
@@ -564,8 +565,7 @@ def webhook():
 
     # Individual file upload
     individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
-                                    group_row, question_row, data_row,
-                                    source, study_type, formatted_date_str)
+                                    group_row, question_row, data_row, source, study_type, formatted_date_str)
     if individual_result:
         success_count += 1
     else:
@@ -573,8 +573,8 @@ def webhook():
 
     # Master file update
     if process_master_file_update(session, data, entries, questionnaire, folder_id,
-                                fieldnames, group_row, question_row, data_row,
-                                source, study_type, formatted_date_str):
+                                group_row, question_row, data_row, source, study_type, 
+                                formatted_date_str):
         success_count += 1
 
     # Use the global QUESTIONNAIRE_ORDER variable for merging
