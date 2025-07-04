@@ -546,6 +546,7 @@ def webhook():
         requested_folder_id = data.get("box_folder_id")
         folder_id = ensure_valid_folder_id(session, requested_folder_id)
         entries = get_folder_entries(session, folder_id)
+        root_folder_id = None
         if entries is None:
             folder_id = DEFAULT_BOX_FOLDER_ID
             entries = get_folder_entries(session, folder_id)
@@ -579,7 +580,7 @@ def webhook():
     # Use the global QUESTIONNAIRE_ORDER variable for merging
     subfolder_name = "single_file"
     if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries,
-                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire, root_folder_id=root_folder_id):
+                        group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire, root_folder_id):
         success_count += 1
 
     if success_count > 0:
