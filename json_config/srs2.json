@@ -182,7 +182,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID4_srs2_timing": "${e://QID4/ChoiceNumericEntryValue/3}",
+    "QID4_srs2_timing": "${q://QID4/ChoiceNumericEntryValue/3}",
     "QID5_srs2_socialAwarenessRaw": "${e://Field/SRS2_SocialAwareness_ScoreRaw}",
     "QID5_srs2_socialAwarenessT": "${e://Field/SRS2_SocialAwareness_TScore}",
     "QID5_srs2_socialCognitionRaw": "${e://Field/SRS2_SocialCognition_ScoreRaw}",

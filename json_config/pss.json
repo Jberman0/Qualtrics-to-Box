@@ -49,7 +49,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID23_pss_timing": "${e://QID23/ChoiceNumericEntryValue/3}",
+    "QID23_pss_timing": "${q://QID23/ChoiceNumericEntryValue/3}",
     "QID24_pss_scoreRaw": "${e://Field/PSS_ScoreRaw}",
     "QID24_pss_scoreSummary": "${e://Field/PSS_ScoreSummary}",
     "QID24_1_choice": "${q://QID24/ChoiceGroup/SelectedAnswers/1}",

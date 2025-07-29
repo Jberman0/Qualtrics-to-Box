@@ -63,7 +63,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID21_oci-r_timing": "${e://QID21/ChoiceNumericEntryValue/3}",
+    "QID21_oci-r_timing": "${q://QID21/ChoiceNumericEntryValue/3}",
     "QID22_oci-r_scoreRaw": "${e://Field/OCI-R_ScoreRaw}",
     "QID22_oci-r_scoreSummary": "${e://Field/OCI-R_ScoreSummary}",
     "QID22_1_choice": "${q://QID22/ChoiceGroup/SelectedAnswers/1}",

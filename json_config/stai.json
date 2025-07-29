@@ -115,7 +115,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID8_stai_timing": "${e://QID8/ChoiceNumericEntryValue/3}",
+    "QID8_stai_timing": "${q://QID8/ChoiceNumericEntryValue/3}",
     "QID9_stai_stateRaw": "${e://Field/STAI-State_ScoreRaw}", 
     "QID9_stai_stateSummary": "${e://Field/STAI-State_ScoreSummary}", 
     "QID9_stai_traitRaw": "${e://Field/STAI-Trait_ScoreRaw}", 

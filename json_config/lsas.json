@@ -129,7 +129,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID11_lsas-sr_timing": "${e://QID11/ChoiceNumericEntryValue/3}",
+    "QID11_lsas-sr_timing": "${q://QID11/ChoiceNumericEntryValue/3}",
     "QID13_lsas-sr_anxiousRaw": "${e://Field/LSAS-SR_AnxiousRaw}",
     "QID14_lsas-sr_avoidanceRaw": "${e://Field/LSAS-SR_AvoidanceRaw}",
     "QID14_lsas-sr_scoreRaw": "${e://Field/LSAS-SR_ScoreRaw}",

@@ -67,7 +67,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID27_ucla_timing": "${e://QID27/ChoiceNumericEntryValue/3}",
+    "QID27_ucla_timing": "${q://QID27/ChoiceNumericEntryValue/3}",
     "QID28_ucla_scoreRaw": "${e://Field/UCLA_Loneliness_ScoreRaw}",
     "QID28_1_choice": "${q://QID28/ChoiceGroup/SelectedAnswers/1}",
     "QID28_1_value": "${q://QID28/SelectedAnswerRecode/1}",

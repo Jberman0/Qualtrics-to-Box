@@ -124,7 +124,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID15_bHiTop_timing": "${e://QID15/ChoiceNumericEntryValue/3}",
+    "QID15_bHiTop_timing": "${q://QID15/ChoiceNumericEntryValue/3}",
     "QID48_bHiTop_internalizingRaw": "${e://Field/B-HiTOP_Internalizing}",
     "QID48_bHiTop_somatoformRaw": "${e://Field/B-HiTOP_Somatoform}",
     "QID48_bHiTop_detachmentRaw": "${e://Field/B-HiTOP_Detachment}",

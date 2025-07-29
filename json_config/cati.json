@@ -125,7 +125,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID6_cati_timing": "${e://QID6/ChoiceNumericEntryValue/3}",
+    "QID6_cati_timing": "${q://QID6/ChoiceNumericEntryValue/3}",
     "QID7_cati_socRaw": "${e://Field/CATI-SOC_ScoreRaw}",
     "QID7_cati_comRaw": "${e://Field/CATI-COM_ScoreRaw}",
     "QID7_cati_camRaw": "${e://Field/CATI-CAM_ScoreRaw}",

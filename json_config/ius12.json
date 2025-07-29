@@ -48,7 +48,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID19_ius12_timing": "${e://QID19/ChoiceNumericEntryValue/3}",
+    "QID19_ius12_timing": "${q://QID19/ChoiceNumericEntryValue/3}",
     "QID20_ius12_scoreRaw": "${e://Field/IUS-12_ScoreRaw}",
     "QID20_1_choice": "${q://QID20/ChoiceGroup/SelectedAnswers/1}",
     "QID20_1_value": "${q://QID20/SelectedAnswerRecode/1}",

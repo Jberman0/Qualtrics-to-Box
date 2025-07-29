@@ -42,7 +42,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID17_phq9_timing": "${e://QID17/ChoiceNumericEntryValue/3}",
+    "QID17_phq9_timing": "${q://QID17/ChoiceNumericEntryValue/3}",
     "QID18_phq9_scoreRaw": "${e://Field/PHQ-9_ScoreRaw}",
     "QID18_phq9_scoreSummary": "${e://Field/PHQ-9_ScoreSummary}",
     "QID18_1_choice": "${q://QID18/ChoiceGroup/SelectedAnswers/1}",

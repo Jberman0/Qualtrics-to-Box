@@ -46,7 +46,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID25_scs10_timing": "${e://QID25/ChoiceNumericEntryValue/3}",
+    "QID25_scs10_timing": "${q://QID25/ChoiceNumericEntryValue/3}",
     "QID26_scs10_generalRaw": "${e://Field/SCS-10_General_Score}",
     "QID26_scs10_covertRaw": "${e://Field/SCS-10_Covert_Score}",
     "QID26_scs10_scoreRaw": "${e://Field/SCS-10_ScoreRaw}",

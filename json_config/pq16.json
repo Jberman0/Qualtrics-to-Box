@@ -61,7 +61,7 @@
     "participantID": "${e://Field/Participant_ID}",
     "date": "${date://CurrentDate/m%2Fd%2FY}",
     "time": "${date://CurrentTime/ST}",
-    "QID29_pq16_timing": "${e://QID29/ChoiceNumericEntryValue/3}",
+    "QID29_pq16_timing": "${q://QID29/ChoiceNumericEntryValue/3}",
     "QID30_pq16_distress_score": "${e://Field/PQ-16_DistressScore}",
     "QID30_pq16_distress_summary": "${e://Field/PQ-16_DistressSummary}",
     "QID30_pq16_symptom_score": "${e://Field/PQ-16_SymptomScore}",

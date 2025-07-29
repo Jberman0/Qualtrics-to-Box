@@ -11,7 +11,7 @@ def create_participant_folder(participant_id, date_str, subfolder_path):
     Returns:
         str: The full path to the created folder.
     """
-    base_path = r"C:\\Users\\"
+    base_path = r"C:\\Users\\jberm\\Box"
     target_dir = os.path.join(base_path, subfolder_path)
     folder_name = f"{participant_id}_{date_str}"
     new_folder_path = os.path.join(target_dir, folder_name)
