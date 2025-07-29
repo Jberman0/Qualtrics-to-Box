@@ -35,6 +35,16 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
       items: ["Ext_262", "Ext_22", "Ext_370", "Ext_175", "HiTOP_577",
               "HiTOP_11", "Ext_367", "HiTOP_21", "Ext_50"],
       topK: 7
+    },
+    Externalizing: {
+      items: ["Ext_262", "Ext_22", "Ext_370", "HiTOP_577", "HiTOP_11",
+              "Ext_102", "Ext_320", "Ext_256", "Ext_166", "Ext_374"],
+      topK: 8
+    },
+    pFactor: {
+      items: ["HiTOP_333", "HiTOP_368", "HiTOP_451", "HiTOP_456", "HiTOP_44", "HiTOP_624", 
+              "HiTOP_606", "HiTOP_557", "Ext_256", "Ext_166", "Ext_22", "HiTop_577"],
+      topK: 10
     }
   };
 
