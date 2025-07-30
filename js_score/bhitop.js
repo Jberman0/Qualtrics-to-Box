@@ -43,7 +43,7 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
     },
     pFactor: {
       items: ["HiTOP_333", "HiTOP_368", "HiTOP_451", "HiTOP_456", "HiTOP_44", "HiTOP_624", 
-              "HiTOP_606", "HiTOP_557", "Ext_256", "Ext_166", "Ext_22", "HiTop_577"],
+              "HiTOP_606", "HiTOP_557", "Ext_256", "Ext_166", "Ext_22", "HiTOP_577"],
       topK: 10
     }
   };
@@ -54,6 +54,7 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
     const responses = new Map();
     const itemDetails = [];
     let validRowCount = 0;
+    const displayOrder = [];
     
     rows.forEach((row, index) => {
       const span = row.querySelector('span[data-row-id]');
@@ -65,6 +66,7 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
       const input = row.querySelector('input[type="radio"]:checked');
       const textCell = row.querySelector('label');
       const value = input ? parseInt(input.value, 10) : null;
+      displayOrder.push(itemId);
       
       if (value !== null) {
         responses.set(itemId, value);
@@ -86,10 +88,10 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
       });
     });
     
-    return { responses, itemDetails };
+    return { responses, itemDetails, displayOrder };
   }
 
-  function calculateScaleScores(config, responses) {
+  function calculateScaleScores(config, responses, displayOrder) {
     const results = [];
     
     for (const [scaleName, { items, topK }] of Object.entries(config)) {
@@ -124,22 +126,22 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
         EmbeddedField: fieldName
       });
     }
-    
+
+    Qualtrics.SurveyEngine.setEmbeddedData('B-HiTOP_Display_Order', displayOrder.join(', '));
     return results;
   }
 
   // ── Main Execution ────────────────────────────────────
   const container = this.getQuestionContainer();
-  const { responses, itemDetails } = collectResponses(container);
+  const { responses, itemDetails , displayOrder} = collectResponses(container);
   
   if (DEBUG_TABLES && itemDetails.length > 0) {
-    const answeredCount = itemDetails.filter(item => item.Value !== '').length;
     console.group('Item Responses Summary');
     console.table(itemDetails);
     console.groupEnd();
   }
   
-  const results = calculateScaleScores(SCALE_CONFIG, responses);
+  const results = calculateScaleScores(SCALE_CONFIG, responses, displayOrder);
   
   if (DEBUG_TABLES && results.length > 0) {
     console.group('Scale Scores Summary');
