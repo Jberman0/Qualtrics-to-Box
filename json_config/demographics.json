@@ -60,7 +60,7 @@
     "time": "${date://CurrentTime/ST}",
     "QID49_demographics_timing1": "${q://QID49/ChoiceNumericEntryValue/3}",
     "QID32_dob": "${q://QID32/ChoiceTextEntryValue/1}",
-    "QID32_age": "${q://QID32/ChoiceNumericEntryValue/2}",
+    "QID32_age": "${q://QID32/ChoiceTextEntryValue/2}",
     "QID32_pob": "${q://QID32/ChoiceTextEntryValue/3}",
     "QID32_pobState": "${q://QID32/ChoiceTextEntryValue/4}",
     "QID33_sex": "${q://QID33/ChoiceGroup/SelectedChoices}",
