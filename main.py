@@ -406,6 +406,33 @@ def apply_reversal_if_needed(response_data, reversal_config):
                 pass
     return updated_data
 
+def clean_pq16_data(response_data):
+    """
+    Clean PQ-16 data by clearing distressChoice and distressValue 
+    when symptomChoice is False (or symptomValue is 0).
+    
+    Args:
+        response_data (dict): The response data containing PQ-16 responses
+        
+    Returns:
+        dict: Cleaned response data with distress values cleared when appropriate
+    """
+    cleaned_data = response_data.copy()
+
+    for i in range(1, 17):
+        symptom_value_key = f"QID53_{i}_symptomValue"
+        distress_choice_key = f"QID53_{i}_distressChoice"
+        distress_value_key = f"QID53_{i}_distressValue"
+
+        # If symptomValue is 0, clear all distress entried
+        symptom_value = cleaned_data.get(symptom_value_key, "")
+
+        if symptom_value == 0:
+            cleaned_data[distress_choice_key] = ""
+            cleaned_data[distress_value_key] = ""
+
+    return cleaned_data
+
 def merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries, 
                         group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire=None, root_folder_id=None):
     """
@@ -526,7 +553,12 @@ def webhook():
     print(f"✅ Received data for source '{source}', study '{study_type}', date '{formatted_date_str}'")
     # Apply reversal if reverse array is present
     reversal_config = data.get("reverse")
-    all_response_data = apply_reversal_if_needed(response_data, reversal_config)
+
+    # Fix pq-16 data (Qualtrics bug)
+    if questionnaire == "pq16":
+        cleaned_response_data = clean_pq16_data(response_data)
+
+    all_response_data = apply_reversal_if_needed(cleaned_response_data, reversal_config)
     # Prepare CSV rows
     fieldnames = config["order"]
     group_row = fieldnames.copy()
