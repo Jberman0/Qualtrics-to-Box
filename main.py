@@ -556,9 +556,9 @@ def webhook():
 
     # Fix pq-16 data (Qualtrics bug)
     if questionnaire == "pq16":
-        cleaned_response_data = clean_pq16_data(response_data)
+        response_data = clean_pq16_data(response_data)
 
-    all_response_data = apply_reversal_if_needed(cleaned_response_data, reversal_config)
+    all_response_data = apply_reversal_if_needed(response_data, reversal_config)
     # Prepare CSV rows
     fieldnames = config["order"]
     group_row = fieldnames.copy()

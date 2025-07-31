@@ -1,17 +1,12 @@
-/* ========= PQ-16: Single-question scoped validation + scoring ========= */
-
 (function () {
-  // ── Configuration: Scoring thresholds ───────────────────────────────
   const thresholds = {
-    distress: 9,  // Threshold for Distress Score
-    symptom: 6    // Threshold for Symptom Count
+    distress: 9,
+    symptom: 6
   };
 
-  // ── Maps used in scoring ────────────────────────────────────────────
-  const symptomMap  = { "1": 1, "2": 0 };        // SBS1: 1=True, 2=False
-  const distressMap = { "1": 0, "2": 1, "3": 2, "4": 3 }; // SBS2 scale
+  const symptomMap = { "1": 1, "2": 0 };
+  const distressMap = { "1": 0, "2": 1, "3": 2, "4": 3 };
 
-  // ── Helpers (container-scoped) ──────────────────────────────────────
   function clearErrors(scope) {
     scope.querySelectorAll('.error-message').forEach(el => el.remove());
     scope.querySelectorAll('input').forEach(i => i.classList.remove('validation-error'));
@@ -30,7 +25,7 @@
 
   function setSBS2Disabled(row, disabled) {
     const sbs2Inputs = row.querySelectorAll('td.SBS2 input[type="radio"]');
-    const sbs2Cells  = row.querySelectorAll('td.SBS2');
+    const sbs2Cells = row.querySelectorAll('td.SBS2');
     sbs2Inputs.forEach(i => { i.disabled = disabled; });
     sbs2Cells.forEach(td => td.classList.toggle('sbs2-disabled', disabled));
   }
@@ -48,11 +43,9 @@
     });
   }
 
-  // Validation strictly within this question container
   function performValidation(qc) {
     let isValid = true;
 
-    // Clear prior errors in this question only
     qc.querySelectorAll('.error-message').forEach(msg => msg.remove());
     qc.querySelectorAll('input').forEach(input => input.classList.remove('validation-error'));
 
@@ -83,21 +76,18 @@
     return isValid;
   }
 
-  // Compute and set Embedded Data (scoped to this question)
   function computeAndSetScores(qc) {
     let distressScore = 0;
-    let symptomCount  = 0;
+    let symptomCount = 0;
 
     qc.querySelectorAll('tr.Choice').forEach((row) => {
       const sbs1 = row.querySelector('.SBS1 input[type="radio"]:checked');
       const sbs2 = row.querySelector('.SBS2 input[type="radio"]:checked');
 
-      // Symptom count (True = 1, False = 0)
       const symptomValue = (sbs1 && symptomMap[sbs1.value] !== undefined)
         ? symptomMap[sbs1.value] : 0;
       symptomCount += symptomValue;
 
-      // Only add distress if symptom was True
       if (symptomValue === 1) {
         const distressValue = (sbs2 && distressMap[sbs2.value] !== undefined)
           ? distressMap[sbs2.value] : 0;
@@ -106,19 +96,17 @@
     });
 
     const distressSummary = distressScore >= thresholds.distress ? "Significant" : "Not Significant";
-    const symptomSummary  = symptomCount  >= thresholds.symptom  ? "Significant" : "Not Significant";
+    const symptomSummary = symptomCount >= thresholds.symptom ? "Significant" : "Not Significant";
 
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_DistressScore", distressScore);
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_DistressSummary", distressSummary);
-    Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomScore",  symptomCount);
+    Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomScore", symptomCount);
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomSummary", symptomSummary);
   }
 
-  // ── Hook: OnReady (scoped) ───────────────────────────────────────────
   Qualtrics.SurveyEngine.addOnReady(function () {
-    const qc = this.getQuestionContainer(); // ✅ Scope to this question
+    const qc = this.getQuestionContainer();
 
-    // Inject CSS once per page
     if (!document.querySelector('#pq16-validation-style')) {
       const style = document.createElement('style');
       style.id = 'pq16-validation-style';
@@ -132,10 +120,8 @@
       document.head.appendChild(style);
     }
 
-    // Initialize SBS2 disabled/enabled based on SBS1
     initializeSBS2State(qc);
 
-    // Live behavior within the question
     qc.addEventListener('change', function (e) {
       const input = e.target;
       if (!(input && input.matches('input[type="radio"]'))) return;
@@ -162,7 +148,6 @@
       }
     });
 
-    // Validate on Next click (extra guard)
     const nextButton = document.querySelector('#NextButton');
     if (nextButton) {
       nextButton.addEventListener('click', function (e) {
@@ -175,19 +160,15 @@
     }
   });
 
-  // ── Hook: OnPageSubmit (scoped) ──────────────────────────────────────
   Qualtrics.SurveyEngine.addOnPageSubmit(function () {
-    const qc = this.getQuestionContainer(); // ✅ Scope to this question
+    const qc = this.getQuestionContainer();
 
-    // 1) Validate first; block submit if invalid
     if (!performValidation(qc)) {
       return false;
     }
 
-    // 2) Compute and set embedded data (only from this question)
     computeAndSetScores(qc);
-
-    return true; // allow submit
+    return true;
   });
 
 })();
