@@ -12,9 +12,9 @@
     "QID9_6_choice", "QID9_6_value", "QID9_7_choice", "QID9_7_value", "QID9_8_choice", "QID9_8_valueR", "QID9_9_choice", "QID9_9_value", "QID9_10_choice", "QID9_10_valueR",
     "QID9_11_choice", "QID9_11_valueR", "QID9_12_choice", "QID9_12_value", "QID9_13_choice", "QID9_13_value", "QID9_14_choice", "QID9_14_value", "QID9_15_choice", "QID9_15_valueR",
     "QID9_16_choice", "QID9_16_valueR", "QID9_17_choice", "QID9_17_value", "QID9_18_choice", "QID9_18_value", "QID9_19_choice", "QID9_19_valueR", "QID9_20_choice", "QID9_20_valueR",
-    "QID10_1_choice", "QID10_1_valueR", "QID10_2_choice", "QID10_2_value", "QID10_3_choice", "QID10_3_valueR", "QID10_4_choice", "QID10_4_value", "QID10_5_choice", "QID10_5_value",
+    "QID54_staiTrait_timing", "QID10_1_choice", "QID10_1_valueR", "QID10_2_choice", "QID10_2_value", "QID10_3_choice", "QID10_3_valueR", "QID10_4_choice", "QID10_4_value", "QID10_5_choice", "QID10_5_value",
     "QID10_6_choice", "QID10_6_valueR", "QID10_7_choice", "QID10_7_valueR", "QID10_8_choice", "QID10_8_value", "QID10_9_choice", "QID10_9_value", "QID10_10_choice", "QID10_10_valueR",
-    "QID54_staiTrait_timing", "QID10_11_choice", "QID10_11_value", "QID10_12_choice", "QID10_12_value", "QID10_13_choice", "QID10_13_valueR", "QID10_14_choice", "QID10_14_valueR", "QID10_15_choice", 
+    "QID10_11_choice", "QID10_11_value", "QID10_12_choice", "QID10_12_value", "QID10_13_choice", "QID10_13_valueR", "QID10_14_choice", "QID10_14_valueR", "QID10_15_choice", 
     "QID10_15_value", "QID10_16_choice", "QID10_16_valueR", "QID10_17_choice", "QID10_17_value", "QID10_18_choice", "QID10_18_value", "QID10_19_choice", "QID10_19_valueR", "QID10_20_choice", "QID10_20_value"
   ],
   "reverse": {
