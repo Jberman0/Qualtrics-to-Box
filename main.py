@@ -427,9 +427,11 @@ def clean_pq16_data(response_data):
         # If symptomValue is 0, clear all distress entried
         symptom_value = cleaned_data.get(symptom_value_key, "")
 
-        if symptom_value == 0:
+        if str(symptom_value) == "0" :
             cleaned_data[distress_choice_key] = ""
             cleaned_data[distress_value_key] = ""
+
+            print(f"Cleared values for item {i}")
 
     return cleaned_data
 
