@@ -247,6 +247,11 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
     setEmbeddedData(field, value);
   });
 
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "SRS-2" : "SRS-2";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+
   debugLog("SRS-2 scoring calculation completed successfully");
   debugLog("=".repeat(50)); // Visual separator for multiple runs
 });

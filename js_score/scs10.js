@@ -34,4 +34,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("SCS-10_General_Score", totalGeneralScore);
   Qualtrics.SurveyEngine.setEmbeddedData("SCS-10_Covert_Score", totalCovertScore);
   Qualtrics.SurveyEngine.setEmbeddedData("SCS-10_ScoreRaw", totalScore);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "SCS-10" : "SCS-10";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

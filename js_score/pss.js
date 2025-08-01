@@ -35,4 +35,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   // ── Set Embedded Data ─────────────────────────────────
   Qualtrics.SurveyEngine.setEmbeddedData("PSS_ScoreRaw", scores.total);
   Qualtrics.SurveyEngine.setEmbeddedData("PSS_ScoreSummary", totalSummary);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "PSS" : "PSS";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

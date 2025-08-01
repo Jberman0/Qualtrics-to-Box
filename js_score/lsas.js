@@ -59,4 +59,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("LSAS-SR_AvoidanceRaw", AvoidanceRaw);
   Qualtrics.SurveyEngine.setEmbeddedData("LSAS-SR_ScoreRaw", totalScore);
   Qualtrics.SurveyEngine.setEmbeddedData("LSAS-SR_ScoreSummary", scoreSummary);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "LSAS-SR" : "LSAS-SR";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

@@ -64,4 +64,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("CATI-RIG_ScoreRaw", scores.RIG);
   Qualtrics.SurveyEngine.setEmbeddedData("CATI-REG_ScoreRaw", scores.REG);
   Qualtrics.SurveyEngine.setEmbeddedData("CATI-SEN_ScoreRaw", scores.SEN);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "CATI" : "CATI";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

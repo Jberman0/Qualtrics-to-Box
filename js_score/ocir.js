@@ -24,4 +24,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   // ── Set embedded data ────────────────────────────────
   Qualtrics.SurveyEngine.setEmbeddedData("OCI-R_ScoreRaw", totalScore);
   Qualtrics.SurveyEngine.setEmbeddedData("OCI-R_ScoreSummary", scoreSummary);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "OCI-R" : "OCI-R";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

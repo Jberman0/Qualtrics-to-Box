@@ -15,4 +15,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
 
   // ── Set embedded data ──────────────────────────
   Qualtrics.SurveyEngine.setEmbeddedData("UCLA_Loneliness_ScoreRaw", totalScore);
+
+  // Save display order to participant
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+  let updatedOrder = currentOrder ? currentOrder + ", " + "UCLA Loneliness" : "UCLA Loneliness";
+  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
 });

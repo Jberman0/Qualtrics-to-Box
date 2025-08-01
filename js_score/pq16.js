@@ -102,6 +102,11 @@
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_DistressSummary", distressSummary);
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomScore", symptomCount);
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomSummary", symptomSummary);
+
+    // Save display order to participant
+    const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
+    let updatedOrder = currentOrder ? currentOrder + ", " + "PQ-16" : "PQ-16";
+    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
   }
 
   Qualtrics.SurveyEngine.addOnReady(function () {
