@@ -104,9 +104,11 @@
     Qualtrics.SurveyEngine.setEmbeddedData("PQ-16_SymptomSummary", symptomSummary);
 
     // Save display order to participant
-    const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-    let updatedOrder = currentOrder ? currentOrder + ", " + "PQ-16" : "PQ-16";
-    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+    const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+    if (!currentOrder.split(", ").includes("PQ-16")) {
+      let updatedOrder = currentOrder ? currentOrder + ", " + "PQ-16" : "PQ-16";
+      Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+    }
   }
 
   Qualtrics.SurveyEngine.addOnReady(function () {

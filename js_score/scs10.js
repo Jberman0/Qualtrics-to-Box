@@ -36,7 +36,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("SCS-10_ScoreRaw", totalScore);
 
   // Save display order to participant
-  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-  let updatedOrder = currentOrder ? currentOrder + ", " + "SCS-10" : "SCS-10";
-  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+  if (!currentOrder.split(", ").includes("SCS-10")) {
+    let updatedOrder = currentOrder ? currentOrder + ", " + "SCS-10" : "SCS-10";
+    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  }
 });

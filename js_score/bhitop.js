@@ -130,9 +130,11 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
     Qualtrics.SurveyEngine.setEmbeddedData('B-HiTOP_Display_Order', displayOrder.join(', '));
 
     // Save display order to participant
-    const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-    let updatedOrder = currentOrder ? currentOrder + ", " + "B-HiTOP" : "B-HiTOP";
-    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+    const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+    if (!currentOrder.split(", ").includes("B-HiTOP")) {
+      let updatedOrder = currentOrder ? currentOrder + ", " + "B-HiTOP" : "B-HiTOP";
+      Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+    }
 
     return results;
   }

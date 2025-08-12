@@ -23,7 +23,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("IUS-12_ScoreRaw", totalScore);
 
   // Save display order to participant
-  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-  let updatedOrder = currentOrder ? currentOrder + ", " + "IUS-12" : "IUS-12";
-  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+  if (!currentOrder.split(", ").includes("IUS-12")) {
+    let updatedOrder = currentOrder ? currentOrder + ", " + "IUS-12" : "IUS-12";
+    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  }
 });

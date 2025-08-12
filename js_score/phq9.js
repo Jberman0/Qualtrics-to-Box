@@ -32,7 +32,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("PHQ-9_ScoreSummary", scoreSummary);
 
   // Save display order to participant
-  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-  let updatedOrder = currentOrder ? currentOrder + ", " + "PHQ-9" : "PHQ-9";
-  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+  if (!currentOrder.split(", ").includes("PHQ-9")) {
+    let updatedOrder = currentOrder ? currentOrder + ", " + "PHQ-9" : "PHQ-9";
+    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  }
 });

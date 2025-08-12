@@ -17,7 +17,9 @@ Qualtrics.SurveyEngine.addOnPageSubmit(function() {
   Qualtrics.SurveyEngine.setEmbeddedData("UCLA_Loneliness_ScoreRaw", totalScore);
 
   // Save display order to participant
-  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder");
-  let updatedOrder = currentOrder ? currentOrder + ", " + "UCLA Loneliness" : "UCLA Loneliness";
-  Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  const currentOrder = Qualtrics.SurveyEngine.getEmbeddedData("displayOrder") || "";
+  if (!currentOrder.split(", ").includes("UCLA Loneliness")) {
+    let updatedOrder = currentOrder ? currentOrder + ", " + "UCLA Loneliness" : "UCLA Loneliness";
+    Qualtrics.SurveyEngine.setEmbeddedData("displayOrder", updatedOrder);
+  }
 });
