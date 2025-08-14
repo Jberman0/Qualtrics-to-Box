@@ -258,8 +258,8 @@ def download_existing_csv_content(session, file_id):
         print(f"⚠️ Couldn't download existing file, starting fresh")
         return []
 
-def update_master_csv(session, questionnaire, group_row, question_row, data_row, 
-                     folder_id, source, study_type, formatted_date_str, entries):
+def update_master_csv(session, group_row, question_row, data_row, 
+                    folder_id, source, study_type, formatted_date_str, entries):
     """
     Update master CSV file:
     1. Find the current master file for this source
@@ -267,10 +267,7 @@ def update_master_csv(session, questionnaire, group_row, question_row, data_row,
     3. Only rename if the new date is greater than the current master date
     """
     file_id, old_name = find_source_master_file(entries, source, study_type)
-    if questionnaire != "unknown":
-        new_master_name = f"{study_type}_{source}_{questionnaire}_master_{formatted_date_str}.csv"
-    else:
-        new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
+    new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
 
     # Prepare CSV content
     buf = io.StringIO()
@@ -375,7 +372,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return True
     
     try:
-        update_master_csv(session, questionnaire, group_row, question_row, data_row,
+        update_master_csv(session, group_row, question_row, data_row,
                          folder_id, source, study_type, formatted_date_str, entries)
         return True
     except Exception as e:
@@ -523,7 +520,9 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
         root_folder_id = folder_id
     single_file_folder_id = get_or_create_subfolder(session, root_folder_id, subfolder_name)
     if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
-        print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
+        update_master_csv(session=session, group_row=merged_header, question_row=merged_label, 
+                data_row=merged_data, folder_id=root_folder_id, source=source, study_type=study_type, formatted_date_str=formatted_date_str, entries=entries)
+        print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder and master file")
         return True
     else:
         return False
