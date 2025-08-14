@@ -188,10 +188,13 @@ def upload_file(session, filename, content, folder_id):
     resp = session.post(BOX_UPLOAD_URL, files=files)
     if resp.status_code == 201:
         print(f"✅ Uploaded {filename}")
+        return True
     elif resp.status_code == 409:
         print(f"⚠️ File {filename} already exists")
+        return False
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
+        return False
 
 def rename_file(session, file_id, new_name):
     """Rename a Box file."""
