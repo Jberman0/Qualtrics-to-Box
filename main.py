@@ -188,10 +188,13 @@ def upload_file(session, filename, content, folder_id):
     resp = session.post(BOX_UPLOAD_URL, files=files)
     if resp.status_code == 201:
         print(f"✅ Uploaded {filename}")
+        return True
     elif resp.status_code == 409:
         print(f"⚠️ File {filename} already exists")
+        return False
     else:
         print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
+        return False
 
 def rename_file(session, file_id, new_name):
     """Rename a Box file."""
@@ -258,7 +261,7 @@ def download_existing_csv_content(session, file_id):
         print(f"⚠️ Couldn't download existing file, starting fresh")
         return []
 
-def update_master_csv(session, questionnaire, group_row, question_row, data_row, 
+def update_master_csv(session, group_row, question_row, data_row, 
                      folder_id, source, study_type, formatted_date_str, entries):
     """
     Update master CSV file:
@@ -266,11 +269,9 @@ def update_master_csv(session, questionnaire, group_row, question_row, data_row,
     2. Download it (if it exists), append new row, upload
     3. Only rename if the new date is greater than the current master date
     """
+
     file_id, old_name = find_source_master_file(entries, source, study_type)
-    if questionnaire != "unknown":
-        new_master_name = f"{study_type}_{source}_{questionnaire}_master_{formatted_date_str}.csv"
-    else:
-        new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
+    new_master_name = f"{study_type}_{source}_master_{formatted_date_str}.csv"
 
     # Prepare CSV content
     buf = io.StringIO()
@@ -375,7 +376,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return True
     
     try:
-        update_master_csv(session, questionnaire, group_row, question_row, data_row,
+        update_master_csv(session, group_row, question_row, data_row,
                          folder_id, source, study_type, formatted_date_str, entries)
         return True
     except Exception as e:
@@ -522,7 +523,11 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     if root_folder_id is None:
         root_folder_id = folder_id
     single_file_folder_id = get_or_create_subfolder(session, root_folder_id, subfolder_name)
+    entries = get_folder_entries(session, single_file_folder_id)
     if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
+        update_master_csv(session, merged_header, merged_label, merged_data, 
+                     folder_id, source, study_type, formatted_date_str, entries)
+        
         print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
         return True
     else:
@@ -605,16 +610,16 @@ def webhook():
     else:
         print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
 
-    # Master file update
-    if process_master_file_update(session, data, entries, questionnaire, folder_id,
-                                group_row, question_row, data_row, source, study_type, 
-                                formatted_date_str):
-        success_count += 1
-
     # Use the global QUESTIONNAIRE_ORDER variable for merging
     subfolder_name = "single_file"
     if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries,
                         group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire, root_folder_id):
+        success_count += 1
+
+    # Master file update
+    if process_master_file_update(session, data, entries, questionnaire, folder_id,
+                                group_row, question_row, data_row, source, study_type, 
+                                formatted_date_str):
         success_count += 1
 
     if success_count > 0:
