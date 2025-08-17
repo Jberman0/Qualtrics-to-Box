@@ -523,10 +523,10 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     if root_folder_id is None:
         root_folder_id = folder_id
     single_file_folder_id = get_or_create_subfolder(session, root_folder_id, subfolder_name)
-    entries = get_folder_entries(session, single_file_folder_id)
+    master_entries = get_folder_entries(session, root_folder_id)
     if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
         update_master_csv(session, merged_header, merged_label, merged_data, 
-                     folder_id, source, study_type, formatted_date_str, entries)
+                     root_folder_id, source, study_type, formatted_date_str, master_entries)
         
         print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
         return True
