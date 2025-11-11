@@ -18,6 +18,7 @@ BOX_ENTERPRISE_ID = os.environ.get("BOX_ENTERPRISE_ID")
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY")
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
 DEFAULT_BOX_FOLDER_ID = "314409658870"
+FIRST_SCREENER_ROOT_FOLDER_ID = "329060221630"
 
 # Define the questionnaire order
 QUESTIONNAIRE_ORDER = [
@@ -602,6 +603,7 @@ def webhook():
     # Process uploads
     success_count = 0
 
+    # Always append to the shared SLB master file for first-screener sources
     # Individual file upload
     individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
                                     group_row, question_row, data_row, source, study_type, formatted_date_str)
@@ -616,11 +618,22 @@ def webhook():
                         group_row, question_row, data_row, subfolder_name, QUESTIONNAIRE_ORDER, questionnaire, root_folder_id):
         success_count += 1
 
-    # Master file update
-    if process_master_file_update(session, data, entries, questionnaire, folder_id,
+    # Master file update (source-specific master)
+    master_result = process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 group_row, question_row, data_row, source, study_type, 
-                                formatted_date_str):
+                                formatted_date_str)
+    if master_result:
         success_count += 1
+        # If this is a first-screener source, also append the same data to the shared SLB master
+        if source in {"firstScreenerAutistic", "firstScreenerNeurotypical"}:
+            try:
+                slb_root = FIRST_SCREENER_ROOT_FOLDER_ID
+                slb_entries = get_folder_entries(session, slb_root)
+                update_master_csv(session, group_row, question_row, data_row,
+                                  slb_root, "firstScreener", "slb_fMRI", formatted_date_str, slb_entries)
+                print(f"✅ Appended to SLB firstScreener master in folder {slb_root}")
+            except Exception as e:
+                print(f"❌ Appending to SLB master failed: {e}")
 
     if success_count > 0:
         return jsonify({"status": "success", "message": f"Processed {success_count} operations"}), 200
