@@ -10,6 +10,9 @@ from dateutil import parser
 import jwt
 import pytz
 import re
+import gspread
+import pandas as pd
+from google.oauth2.service_account import Credentials
 
 # ------------------------ CONFIGURATION ------------------------
 BOX_CLIENT_ID = os.environ.get("BOX_CLIENT_ID")
@@ -534,6 +537,66 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     else:
         return False
 
+def update_stratified_doc_screener(response_data):
+    scope = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive",
+    ]
+
+    creds = Credentials.from_service_account_file("/etc/secrets/slb-fmri-stratified-7b734196fbb6.json", scopes=scope)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open("SLB Stratified Sampling")
+
+    # Sheet 1 - Symptoms (GAD-7, AQ-10, SMSAD)
+    sheet_1 = spreadsheet.sheet1   
+
+    # Get dataframe 
+    symptoms_values = sheet_1.get("I14:M20")
+    symptoms_list = list(symptoms_values)
+    df_1 = pd.DataFrame(symptoms_list[1:], columns=symptoms_list[0]).reset_index(drop=True) 
+
+    # particiantID
+    participant_id = response_data.get("participantID", "").strip() or "unknownID"
+
+    # Get values 
+    aq_10_score = int(response_data.get("QID82_aq10_scoreRaw"))
+    smsad_score = int(response_data.get("QID84_smsad_scoreAverage"))
+    gad_7_score = int(response_data.get("QID83_gad7_scoreRaw"))
+
+    # Symptoms dict
+    scores_info = {
+        "aq_10_score": {
+            "score": aq_10_score,
+            "threshold": 5,
+            "low": [(3, 7), df_1.iloc[0, 3]],
+            "high": [(3, 8), df_1.iloc[1, 3]]
+        },
+        "smsad_score": {
+            "score": smsad_score,
+            "threshold": 2,
+            "low": [(6, 7), df_1.iloc[2, 3]],
+            "high": [(6, 8), df_1.iloc[3, 3]]
+        },
+        "gad_7_score": {
+            "score": gad_7_score,
+            "threshold": 9,
+            "low": [(9, 7), df_1.iloc[4, 3]],
+            "high": [(9, 8), df_1.iloc[5, 3]]
+        },
+    }
+
+    # ============= Symptoms Update =============
+    for key, info in scores_info.items():
+        score = info["score"]
+        category = "low" if score <= info["threshold"] else "high"
+
+        (row, col), old_val = info[category]
+
+        new_val = int(old_val) + 1
+        print(f"Updating {key} ({category}): {old_val} -> {new_val}")
+
+        sheet_1.update_cell(row, col, new_val)
+
 # ------------------------ FLASK APPLICATION ------------------------
 app = Flask(__name__)
 
@@ -640,6 +703,25 @@ def webhook():
     else:
         return jsonify({"status": "error", "message": "All operations failed"}), 500
 
+@app.route("/webhook2", methods=["POST"])
+def webhook2():
+    """Main webhook endpoint for updating stratified sampling spreadsheet."""
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Invalid JSON"}), 400
+    # Check token
+    if data.get("token") != EXPECTED_TOKEN:
+        return jsonify({"status": "forbidden"}), 403
+
+    try:
+        response_data = data.get("response", {})
+        update_stratified_doc_screener(response_data)
+        return jsonify({"status": "success", "message": "Stratified sampling spreadsheet updated"}), 200
+    except Exception as e:
+        print(f"❌ Error updating stratified sampling spreadsheet: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
+        
 @app.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint."""

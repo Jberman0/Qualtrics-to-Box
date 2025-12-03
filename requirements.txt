@@ -5,3 +5,6 @@ python-dateutil
 PyJWT
 cryptography
 pytz
+gspread
+pandas
+google-auth
