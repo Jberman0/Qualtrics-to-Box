@@ -20,6 +20,7 @@ BOX_CLIENT_SECRET = os.environ.get("BOX_CLIENT_SECRET")
 BOX_ENTERPRISE_ID = os.environ.get("BOX_ENTERPRISE_ID")
 BOX_JWT_PRIVATE_KEY = os.environ.get("BOX_JWT_PRIVATE_KEY")
 EXPECTED_TOKEN = os.environ.get("EXPECTED_TOKEN")
+GOOGLE_SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE")
 DEFAULT_BOX_FOLDER_ID = "314409658870"
 FIRST_SCREENER_ROOT_FOLDER_ID = "329060221630"
 
@@ -543,7 +544,7 @@ def update_stratified_doc_screener(response_data):
         "https://www.googleapis.com/auth/drive",
     ]
 
-    creds = Credentials.from_service_account_file("/etc/secrets/slb-fmri-stratified-7b734196fbb6.json", scopes=scope)
+    creds = Credentials.from_service_account_file(GOOGLE_SERVICE_ACCOUNT_FILE, scopes=scope)
     client = gspread.authorize(creds)
     spreadsheet = client.open("SLB Stratified Sampling")
 
@@ -716,8 +717,13 @@ def webhook2():
 
     try:
         response_data = data.get("response", {})
-        update_stratified_doc_screener(response_data)
-        return jsonify({"status": "success", "message": "Stratified sampling spreadsheet updated"}), 200
+        final_status = response_data.get("finalStatus", "").lower()
+        if final_status != "complete":
+            print(f"ℹ️ Final status is '{final_status}' - skipping spreadsheet update.")
+            return jsonify({"status": "skipped", "message": f"Final status is '{final_status}'."}), 200
+        else:
+            update_stratified_doc_screener(response_data)
+            return jsonify({"status": "success", "message": "Stratified sampling spreadsheet updated"}), 200
     except Exception as e:
         print(f"❌ Error updating stratified sampling spreadsheet: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
