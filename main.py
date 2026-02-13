@@ -267,7 +267,7 @@ def download_existing_csv_content(session, file_id):
         return []
 
 def update_master_csv(session, group_row, question_row, data_row, 
-                     folder_id, source, study_type, formatted_date_str, entries):
+                     folder_id, source, study_type, formatted_date_str, entries, participant_id):
     """
     Update master CSV file:
     1. Find the current master file for this source
@@ -286,6 +286,9 @@ def update_master_csv(session, group_row, question_row, data_row,
         # Download and append to existing file
         existing_rows = download_existing_csv_content(session, file_id)
         if existing_rows:
+            if not check_duplicates(existing_rows, participant_id):
+                print(f"Aborting master update")
+                return False
             writer.writerows(existing_rows)  # Keep all previous data
         else:
             # If download failed, add headers
@@ -313,14 +316,27 @@ def update_master_csv(session, group_row, question_row, data_row,
                 should_update_master_filename(old_name, formatted_date_str, study_type, source)):
                 rename_file(session, file_id, new_master_name)
                 print(f"✅ Renamed master file (new date {formatted_date_str} > old date)")
+                return True
             elif old_name != new_master_name:
                 print(f"ℹ️ Keeping old filename - new date {formatted_date_str} is not greater than existing date")
+                return True
         else:
             print(f"❌ Master update failed: {resp.text}")
+            return False
     else:
         # Create new master file
         upload_file(session, new_master_name, csv_content, folder_id)
         print("✅ Created new master CSV")
+        return True
+
+def check_duplicates(existing_rows, participant_id):
+    curr_ids = {row[0] for row in existing_rows}
+        
+    if participant_id in curr_ids:
+        print(f"Duplicate participant_id found: {participant_id}")
+        return False
+    
+    return True
 
 def create_csv_content(group_row, question_row, data_row):
     """Create CSV content from rows."""
@@ -372,7 +388,7 @@ def process_individual_file_upload(session, data, entries, participant_id, quest
 
 def process_master_file_update(session, data, entries, questionnaire, folder_id,
                               group_row, question_row, data_row,
-                              source, study_type, formatted_date_str):
+                              source, study_type, formatted_date_str, participant_id):
     """Handle master CSV file update."""
     do_master = data.get("master", True)  # Default to True if not specified
     
@@ -381,9 +397,9 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
         return True
     
     try:
-        update_master_csv(session, group_row, question_row, data_row,
-                         folder_id, source, study_type, formatted_date_str, entries)
-        return True
+        if update_master_csv(session, group_row, question_row, data_row,
+                         folder_id, source, study_type, formatted_date_str, entries, participant_id):
+                         return True
     except Exception as e:
         print(f"❌ Master update error: {e}")
         return False
@@ -530,11 +546,10 @@ def merge_csvs_for_participant(session, folder_id, study_type, source, participa
     single_file_folder_id = get_or_create_subfolder(session, root_folder_id, subfolder_name)
     master_entries = get_folder_entries(session, root_folder_id)
     if upload_file(session, merged_filename, buf.getvalue(), single_file_folder_id):
-        update_master_csv(session, merged_header, merged_label, merged_data, 
-                     root_folder_id, source, study_type, formatted_date_str, master_entries)
-        
-        print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
-        return True
+        if update_master_csv(session, merged_header, merged_label, merged_data, 
+                     root_folder_id, source, study_type, formatted_date_str, master_entries, participant_id):
+                     print(f"Horizontally merged CSV uploaded as {merged_filename} to '{subfolder_name}' subfolder")
+                     return True
     else:
         return False
 
@@ -685,7 +700,7 @@ def webhook():
     # Master file update (source-specific master)
     master_result = process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 group_row, question_row, data_row, source, study_type, 
-                                formatted_date_str)
+                                formatted_date_str, participant_id)
     if master_result:
         success_count += 1
         # If this is a first-screener source, also append the same data to the shared SLB master
@@ -693,9 +708,9 @@ def webhook():
             try:
                 slb_root = FIRST_SCREENER_ROOT_FOLDER_ID
                 slb_entries = get_folder_entries(session, slb_root)
-                update_master_csv(session, group_row, question_row, data_row,
-                                  slb_root, "firstScreener", "slb_fMRI", formatted_date_str, slb_entries)
-                print(f"✅ Appended to SLB firstScreener master in folder {slb_root}")
+                if update_master_csv(session, group_row, question_row, data_row,
+                                  slb_root, "firstScreener", "slb_fMRI", formatted_date_str, slb_entries, participant_id):
+                                  print(f"✅ Appended to SLB firstScreener master in folder {slb_root}")
             except Exception as e:
                 print(f"❌ Appending to SLB master failed: {e}")
 
