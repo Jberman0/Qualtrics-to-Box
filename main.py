@@ -682,8 +682,8 @@ def webhook():
     # Process uploads
     success_count = 0
 
-    # Individual file upload - onyl want master for screener responces
-    if source != "screening":
+    # Individual file upload - only want master for screener & feedback responces
+    if source not in {"screening", "feedback"}:
         individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
                                         group_row, question_row, data_row, source, study_type, formatted_date_str)
 
