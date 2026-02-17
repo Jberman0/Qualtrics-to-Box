@@ -682,10 +682,11 @@ def webhook():
     # Process uploads
     success_count = 0
 
-    # Always append to the shared SLB master file for first-screener sources
-    # Individual file upload
-    individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
-                                    group_row, question_row, data_row, source, study_type, formatted_date_str)
+    # Individual file upload - onyl want master for screener responces
+    if source != "screening":
+        individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
+                                        group_row, question_row, data_row, source, study_type, formatted_date_str)
+
     if individual_result:
         success_count += 1
     else:
