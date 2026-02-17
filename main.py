@@ -684,14 +684,12 @@ def webhook():
 
     # Individual file upload - only want master for screener & feedback responces
     if source not in {"screening", "feedback"}:
-        individual_result = process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
-                                        group_row, question_row, data_row, source, study_type, formatted_date_str)
-
-    if individual_result:
-        success_count += 1
-    else:
-        print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
-
+        if process_individual_file_upload(session, data, entries, participant_id, questionnaire, folder_id,
+                                        group_row, question_row, data_row, source, study_type, formatted_date_str):
+            success_count += 1
+        else:
+            print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
+        
     # Use the global QUESTIONNAIRE_ORDER variable for merging
     subfolder_name = "single_file"
     if merge_csvs_for_participant(session, folder_id, study_type, source, participant_id, formatted_date_str, entries,
@@ -699,11 +697,11 @@ def webhook():
         success_count += 1
 
     # Master file update (source-specific master)
-    master_result = process_master_file_update(session, data, entries, questionnaire, folder_id,
+    if process_master_file_update(session, data, entries, questionnaire, folder_id,
                                 group_row, question_row, data_row, source, study_type, 
-                                formatted_date_str, participant_id)
-    if master_result:
+                                formatted_date_str, participant_id):
         success_count += 1
+        
         # If this is a first-screener source, also append the same data to the shared SLB master
         if source in {"firstScreenerAutistic", "firstScreenerNeurotypical"}:
             try:
