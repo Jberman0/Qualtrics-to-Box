@@ -71,10 +71,10 @@ def refresh_access_token():
         access_token = resp_json['access_token']
         expires_in = resp_json.get('expires_in', 3600)
         token_expires_at = datetime.utcnow() + timedelta(seconds=expires_in - 60)
-        print("✅ Refreshed Box access token")
+        print("Refreshed Box access token")
         return access_token
     else:
-        print(f"❌ JWT token refresh failed: {resp.status_code} - {resp.text}")
+        print(f"JWT token refresh failed: {resp.status_code} - {resp.text}")
         raise Exception(f"Box JWT token refresh failed: {resp.text}")
 
 def get_access_token():
@@ -101,7 +101,7 @@ def get_folder_entries(session, folder_id):
     if resp.status_code == 200:
         return resp.json().get("entries", [])
     else:
-        print(f"⚠️ Box folder listing failed ({resp.status_code}): {resp.text}")
+        print(f"Box folder listing failed ({resp.status_code}): {resp.text}")
         return None
 
 def ensure_valid_folder_id(session, folder_id, default_folder_id=DEFAULT_BOX_FOLDER_ID):
@@ -113,7 +113,7 @@ def ensure_valid_folder_id(session, folder_id, default_folder_id=DEFAULT_BOX_FOL
     if entries is not None:
         return folder_id
     else:
-        print(f"⚠️ Folder {folder_id} not found, defaulting to {default_folder_id}")
+        print(f"Folder {folder_id} not found, defaulting to {default_folder_id}")
         return default_folder_id
 
 def get_file_id_from_entries(filename, entries):
@@ -177,10 +177,10 @@ def get_or_create_subfolder(session, folder_id, subfolder_name):
     resp = session.post(create_folder_url, json=data)
     if resp.status_code == 201:
         new_folder_id = resp.json().get("id")
-        print(f"✅ Created '{subfolder_name}' subfolder with ID {new_folder_id}")
+        print(f"Created '{subfolder_name}' subfolder with ID {new_folder_id}")
         return new_folder_id
     else:
-        print(f"❌ Failed to create '{subfolder_name}' subfolder: {resp.status_code} - {resp.text}")
+        print(f"Failed to create '{subfolder_name}' subfolder: {resp.status_code} - {resp.text}")
         raise Exception(f"Could not create '{subfolder_name}' subfolder")
 
 def upload_file(session, filename, content, folder_id):
@@ -192,13 +192,13 @@ def upload_file(session, filename, content, folder_id):
     
     resp = session.post(BOX_UPLOAD_URL, files=files)
     if resp.status_code == 201:
-        print(f"✅ Uploaded {filename}")
+        print(f"Uploaded {filename}")
         return True
     elif resp.status_code == 409:
-        print(f"⚠️ File {filename} already exists")
+        print(f"File {filename} already exists")
         return False
     else:
-        print(f"❌ Upload failed ({resp.status_code}): {resp.text}")
+        print(f"Upload failed ({resp.status_code}): {resp.text}")
         return False
 
 def rename_file(session, file_id, new_name):
@@ -211,9 +211,9 @@ def rename_file(session, file_id, new_name):
                       headers={"Content-Type": "application/json"})
     
     if resp.status_code == 200:
-        print(f"✅ Renamed to {new_name}")
+        print(f"Renamed to {new_name}")
     else:
-        print(f"⚠️ Rename failed: {resp.text}")
+        print(f"Rename failed: {resp.text}")
 
 # ------------------------ MASTER CSV LOGIC ------------------------
 def find_source_master_file(entries, source, study_type):
@@ -263,7 +263,7 @@ def download_existing_csv_content(session, file_id):
     if resp.status_code == 200:
         return list(csv.reader(io.StringIO(resp.content.decode())))
     else:
-        print(f"⚠️ Couldn't download existing file, starting fresh")
+        print(f"Couldn't download existing file, starting fresh")
         return []
 
 def update_master_csv(session, group_row, question_row, data_row, 
@@ -309,24 +309,24 @@ def update_master_csv(session, group_row, question_row, data_row,
         resp = session.post(BOX_UPDATE_URL.format(file_id=file_id), files=files)
         
         if resp.status_code in (200, 201):
-            print(f"✅ Updated master content")
+            print(f"Updated master content")
             
             # Only rename if new date is greater than old date
             if (old_name != new_master_name and 
                 should_update_master_filename(old_name, formatted_date_str, study_type, source)):
                 rename_file(session, file_id, new_master_name)
-                print(f"✅ Renamed master file (new date {formatted_date_str} > old date)")
+                print(f"Renamed master file (new date {formatted_date_str} > old date)")
                 return True
             elif old_name != new_master_name:
-                print(f"ℹ️ Keeping old filename - new date {formatted_date_str} is not greater than existing date")
+                print(f"Keeping old filename - new date {formatted_date_str} is not greater than existing date")
                 return True
         else:
-            print(f"❌ Master update failed: {resp.text}")
+            print(f"Master update failed: {resp.text}")
             return False
     else:
         # Create new master file
         upload_file(session, new_master_name, csv_content, folder_id)
-        print("✅ Created new master CSV")
+        print("Created new master CSV")
         return True
 
 def check_duplicates(existing_rows, participant_id):
@@ -354,7 +354,7 @@ def get_formatted_date(response_data):
     today = datetime.now(tz).strftime("%m-%d-%Y")
     
     if not raw_date or not str(raw_date).strip():
-        print(f"⚠️ No date found, defaulting to today - {today}.")
+        print(f"No date found, defaulting to today - {today}.")
         return today
         
     date_str = str(raw_date).strip().replace("/", "-")
@@ -362,7 +362,7 @@ def get_formatted_date(response_data):
         dt = parser.parse(date_str, dayfirst=False, yearfirst=False)
         return dt.strftime("%m-%d-%Y")
     except Exception as e:
-        print(f"⚠️ Could not parse date '{raw_date}', defaulting to today - {today}. ({e})")
+        print(f"Could not parse date '{raw_date}', defaulting to today - {today}. ({e})")
         return today
 
 
@@ -383,7 +383,7 @@ def process_individual_file_upload(session, data, entries, participant_id, quest
         upload_file(session, individual_name, csv_content, folder_id)
         return True
     except Exception as e:
-        print(f"❌ Individual file upload error: {e}")
+        print(f"Individual file upload error: {e}")
         return False
 
 def process_master_file_update(session, data, entries, questionnaire, folder_id,
@@ -393,7 +393,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
     do_master = data.get("master", True)  # Default to True if not specified
     
     if not do_master:
-        print("ℹ️ Skipping master file update (master=false)")
+        print("Skipping master file update (master=false)")
         return True
     
     try:
@@ -401,7 +401,7 @@ def process_master_file_update(session, data, entries, questionnaire, folder_id,
                          folder_id, source, study_type, formatted_date_str, entries, participant_id):
                          return True
     except Exception as e:
-        print(f"❌ Master update error: {e}")
+        print(f"Master update error: {e}")
         return False
 
 def apply_reversal_if_needed(response_data, reversal_config):
@@ -637,7 +637,7 @@ def webhook():
         "order": data.get("order", []),
         "questions": data.get("questions", {})
     }
-    print(f"✅ Received data for source '{source}', study '{study_type}', date '{formatted_date_str}'")
+    print(f"Received data for source '{source}', study '{study_type}', date '{formatted_date_str}'")
     # Apply reversal if reverse array is present
     reversal_config = data.get("reverse")
 
@@ -655,7 +655,7 @@ def webhook():
     # Check if there is any data other than date and time (and participantID)
     non_empty_fields = [f for f in fieldnames if f not in ("date", "time", "participantID") and str(all_response_data.get(f, "")).strip() != ""]
     if not non_empty_fields:
-        print(f"⚠️ No data other than date/time/participantID - {questionnaire} - skipping CSV write.")
+        print(f"No data other than date/time/participantID - {questionnaire} - skipping CSV write.")
         return jsonify({"status": "skipped", "message": "No data to write except date/time/participantID."}), 200
     
     # --- Participant/date subfolder logic ---
@@ -688,7 +688,7 @@ def webhook():
                                         group_row, question_row, data_row, source, study_type, formatted_date_str):
             success_count += 1
         else:
-            print(f"ℹ️ Individual file upload failed or was skipped - checking for 409 conflict in logs")
+            print(f"Individual file upload failed or was skipped - checking for 409 conflict in logs")
         
     # Use the global QUESTIONNAIRE_ORDER variable for merging
     subfolder_name = "single_file"
@@ -709,9 +709,9 @@ def webhook():
                 slb_entries = get_folder_entries(session, slb_root)
                 if update_master_csv(session, group_row, question_row, data_row,
                                   slb_root, "firstScreener", "slb_fMRI", formatted_date_str, slb_entries, participant_id):
-                                  print(f"✅ Appended to SLB firstScreener master in folder {slb_root}")
+                                  print(f"Appended to SLB firstScreener master in folder {slb_root}")
             except Exception as e:
-                print(f"❌ Appending to SLB master failed: {e}")
+                print(f"Appending to SLB master failed: {e}")
 
     if success_count > 0:
         return jsonify({"status": "success", "message": f"Processed {success_count} operations"}), 200
@@ -733,13 +733,13 @@ def webhook2():
         response_data = data.get("response", {})
         final_status = response_data.get("finalStatus", "").lower()
         if final_status != "complete":
-            print(f"ℹ️ Final status is '{final_status}' - skipping spreadsheet update.")
+            print(f"Final status is '{final_status}' - skipping spreadsheet update.")
             return jsonify({"status": "skipped", "message": f"Final status is '{final_status}'."}), 200
         else:
             update_stratified_doc_screener(response_data)
             return jsonify({"status": "success", "message": "Stratified sampling spreadsheet updated"}), 200
     except Exception as e:
-        print(f"❌ Error updating stratified sampling spreadsheet: {e}")
+        print(f"Error updating stratified sampling spreadsheet: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
         
 @app.route("/health", methods=["GET"])
